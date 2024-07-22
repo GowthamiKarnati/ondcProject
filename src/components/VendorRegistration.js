@@ -216,7 +216,7 @@ const VendorRegistrationForm = () => {
                 <div className="form-row">
                     <div className="input-group">
                         <div className="form-group">
-                            <div style={{display:'flex', flexDirection:'row'}}>
+                            <div style={{display:'flex',alignItems:'center'}}>
                             <label htmlFor="legal-entity-name" className="form-label" style={{ fontWeight: '700' }}>Legal Entity Name</label>
                             <p style={{color:'red'}}>*</p>
                             </div>
@@ -232,7 +232,7 @@ const VendorRegistrationForm = () => {
                             />
                         </div>
                         <div className="form-group">
-                            <div style={{display:'flex', flexDirection:'row'}}>
+                            <div style={{display:'flex',alignItems:'center'}}>
                             <label htmlFor="contact-person-name" className="form-label">Contact Person Name</label>
                             <p style={{color:'red'}}>*</p>
                             </div>
