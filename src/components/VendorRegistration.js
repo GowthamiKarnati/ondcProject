@@ -16,6 +16,7 @@ const VendorRegistrationForm = () => {
     const [panCardNumber, setPanCardNumber] = useState('');
     const [typeOfEntity, setTypeOfEntity] = useState('');
     const [isMsme, setIsMsme] = useState(null);
+    //console.log(isMsme);
     const [isGst, setIsGst] = useState(null);
     const [gstNumber, setGstNumber] = useState('');
     const [bankName, setBankName] = useState('');
@@ -112,16 +113,36 @@ const VendorRegistrationForm = () => {
       };
     const handleSubmit = async(e) =>{
         e.preventDefault();
-        
-        if (uploading || gstuploading || chequeuploading) {
-        alert("Please wait until the file upload is complete.");
-        return;
-        }
-        if(!legalEntityName || !contactPersonName || !designation || !contactNumber || !emailId || !address || !state || !pinCode || !panCardNumber || !typeOfEntity){
+        if(!legalEntityName || !contactPersonName || !designation || !contactNumber || !emailId || !address || !state || !pinCode || !panCardNumber || !typeOfEntity || !bankName || !beneficiaryName || !accountNumber || !ifscCode ||  (isGst && !gstNumber)){
             alert("Please fill all required feilds.");
             return; 
         }
-        else{
+        if (isMsme === null) {
+            alert('Please select whether you are registered under the MSME Act.');
+            return;
+        }
+        if(isGst === null){
+            alert('Please select whether you are registered GST.');
+            return;
+        }
+        if (isMsme && udyamFiles.length === 0) {
+            alert('Please upload the required MSME certificate.');
+            return;
+          }
+        
+          if (isGst && gstFiles.length === 0) {
+            alert('Please upload the required GST certificate.');
+            return;
+          }
+        
+          if (cancelledFiles.length === 0) {
+            alert('Please upload the cancelled cheque.');
+            return;
+          }
+        if (!interested && !notinterested) {
+            alert('Please select an option for the Business Partner Code of Conduct.');
+            return;
+        }
         setIsSubmitting(true);
         const data = {
             legalEntityName,
@@ -156,7 +177,7 @@ const VendorRegistrationForm = () => {
                     },
                     }
             )
-            console.log(response.data)
+            //console.log(response.data)
             setSubmissionStatus('success');
             setTimeout(()=>{
                 setSubmissionStatus(null)
@@ -195,8 +216,6 @@ const VendorRegistrationForm = () => {
             if (fileInputRef.current) {
                 fileInputRef.current.value = '';
             }
-                
-            }
     }
 
     }
@@ -222,7 +241,6 @@ const VendorRegistrationForm = () => {
                             </label>
                             <p style={{ color: 'red', margin: '0 0 0 5px', position: 'relative', top: '-3px' }}>*</p>
                         </div>
-
                             <input
                                 type="text"
                                 id="legal-entity-name"
@@ -235,10 +253,10 @@ const VendorRegistrationForm = () => {
                             />
                         </div>
                         <div className="form-group">
-                            <div style={{display:'flex',alignItems:'center'}}>
+                        <div style={{ display: 'flex', alignItems: 'center' }}>
                             <label htmlFor="contact-person-name" className="form-label">Contact Person Name</label>
-                            <p style={{color:'red'}}>*</p>
-                            </div>
+                            <p style={{ color: 'red', margin: '0 0 0 5px', position: 'relative', top: '-3px' }}>*</p>
+                        </div>
                             <input
                                 type="text"
                                 id="contact-person-name"
@@ -251,10 +269,10 @@ const VendorRegistrationForm = () => {
                     </div>
                     <div className="input-group">
                         <div className="form-group">
-                            <div style={{display:'flex', flexDirection:'row'}}>
+                        <div style={{ display: 'flex', alignItems: 'center' }}>
                             <label htmlFor="designation" className="form-label">Designation</label>
-                            <p style={{color:'red'}}>*</p>
-                            </div>
+                            <p style={{ color: 'red', margin: '0 0 0 5px', position: 'relative', top: '-3px' }}>*</p>
+                        </div>
                             <input
                                 type="text"
                                 id="designation"
@@ -265,10 +283,10 @@ const VendorRegistrationForm = () => {
                             />
                         </div>
                         <div className="form-group">
-                            <div style={{display:'flex', flexDirection:'row'}}>
+                        <div style={{ display: 'flex', alignItems: 'center' }}>
                             <label htmlFor="contact-number" className="form-label">Contact Number</label>
-                            <p style={{color:'red'}}>*</p>
-                            </div>
+                            <p style={{ color: 'red', margin: '0 0 0 5px', position: 'relative', top: '-3px' }}>*</p>
+                        </div>
                             <input
                                 type="text"
                                 id="contact-number"
@@ -281,9 +299,9 @@ const VendorRegistrationForm = () => {
                     </div>
                     <div className="input-group">
                         <div className="form-group">
-                            <div style={{display:'flex', flexDirection:'row'}}>
+                        <div style={{ display: 'flex', alignItems: 'center' }}>
                             <label htmlFor="email-id" className="form-label">Email ID</label>
-                            <p style={{color:'red'}}>*</p>
+                            <p style={{ color: 'red', margin: '0 0 0 5px', position: 'relative', top: '-3px' }}>*</p>
                             </div>
                             <input
                                 type="email"
@@ -295,10 +313,10 @@ const VendorRegistrationForm = () => {
                             />
                         </div>
                         <div className="form-group">
-                            <div style={{display:'flex', flexDirection:'row'}}>
+                        <div style={{ display: 'flex', alignItems: 'center' }}>
                             <label htmlFor="address" className="form-label">Address</label>
-                            <p style={{color:'red'}}>*</p>
-                            </div>
+                            <p style={{ color: 'red', margin: '0 0 0 5px', position: 'relative', top: '-3px' }}>*</p>
+                        </div>
                             <input
                                 type="text"
                                 id="address"
@@ -311,10 +329,10 @@ const VendorRegistrationForm = () => {
                     </div>
                     <div className="input-group">
                         <div className="form-group">
-                            <div style={{display:'flex', flexDirection:'row'}}> 
+                        <div style={{ display: 'flex', alignItems: 'center' }}>
                             <label htmlFor="state" className="form-label">State</label>
-                            <p style={{color:'red'}}>*</p>
-                            </div>
+                            <p style={{ color: 'red', margin: '0 0 0 5px', position: 'relative', top: '-3px' }}>*</p>
+                        </div>
                             <input
                                 type="text"
                                 id="state"
@@ -325,10 +343,10 @@ const VendorRegistrationForm = () => {
                             />
                         </div>
                         <div className="form-group">
-                            <div style={{display:'flex', flexDirection:'row'}}> 
+                        <div style={{ display: 'flex', alignItems: 'center' }}>
                             <label htmlFor="pin-code" className="form-label">Pin Code</label>
-                            <p style={{color:'red'}}>*</p>
-                            </div>
+                            <p style={{ color: 'red', margin: '0 0 0 5px', position: 'relative', top: '-3px' }}>*</p>
+                        </div>
                             <input
                                 type="text"
                                 id="pin-code"
@@ -341,10 +359,10 @@ const VendorRegistrationForm = () => {
                     </div>
                     <div className="input-group">
                         <div className="form-group">
-                            <div style={{display:'flex', flexDirection:'row'}}> 
+                        <div style={{ display: 'flex', alignItems: 'center' }}>
                             <label htmlFor="pan-card-number" className="form-label">PAN Card Number</label>
-                            <p style={{color:'red'}}>*</p>
-                            </div>
+                            <p style={{ color: 'red', margin: '0 0 0 5px', position: 'relative', top: '-3px' }}>*</p>
+                        </div>
                             <input
                                 type="text"
                                 id="pan-card-number"
@@ -355,10 +373,10 @@ const VendorRegistrationForm = () => {
                             />
                         </div>
                         <div className="form-group">
-                            <div style={{display:'flex', flexDirection:'row'}}> 
+                        <div style={{ display: 'flex', alignItems: 'center' }}>
                             <label htmlFor="type-of-entity" className="form-label">Type of Entity</label>
-                            <p style={{color:'red'}}>*</p>
-                            </div>
+                            <p style={{ color: 'red', margin: '0 0 0 5px', position: 'relative', top: '-3px' }}>*</p>
+                        </div>
                             <select
                                 id="type-of-entity"
                                 name="type-of-entity"
@@ -415,7 +433,10 @@ const VendorRegistrationForm = () => {
                 </div>
                     {isMsme && (
                         <div className="form-group" id="udyam-upload-section">
+                            <div style={{ display: 'flex', alignItems: 'center' }}>
                             <label htmlFor="udyam-certificate" className="form-label">Upload UDYAM Certificate</label>
+                            <p style={{ color: 'red', margin: '0 0 0 5px', position: 'relative', top: '-3px' }}>*</p>
+                        </div>
                             <input 
                             type="file" 
                             id="udyam-certificate" 
@@ -464,7 +485,10 @@ const VendorRegistrationForm = () => {
                     </div>
                     {isGst && (
                         <div className="form-group" id="gst-upload-section">
+                            <div style={{ display: 'flex', alignItems: 'center' }}>
                             <label htmlFor="gst-certificate" className="form-label">Upload GST Certificate</label>
+                            <p style={{ color: 'red', margin: '0 0 0 5px', position: 'relative', top: '-3px' }}>*</p>
+                        </div>
                             <input type="file" 
                             id="gst-certificate" 
                             name="gst-certificate" 
@@ -475,7 +499,10 @@ const VendorRegistrationForm = () => {
                               }}
                             />
                             {gstuploading && <div style={{color:'green'}}>Uploading...</div>}
+                            <div style={{ display: 'flex', alignItems: 'center' }}>
                             <label htmlFor="gst-number" className="form-label mt-4">GST Registration Number</label>
+                            <p style={{ color: 'red', margin: '0 0 0 5px', position: 'relative', top: '-3px' }}>*</p>
+                        </div>
                             <input
                                 type="text"
                                 id="gst-number"
@@ -488,7 +515,10 @@ const VendorRegistrationForm = () => {
                     )}
                     <div className="input-group">
                     <div className="form-group">
+                     <div style={{ display: 'flex', alignItems: 'center' }}>
                         <label htmlFor="bank-name" className="form-label">Bank Name</label>
+                        <p style={{ color: 'red', margin: '0 0 0 5px', position: 'relative', top: '-3px' }}>*</p>
+                        </div>
                         <input
                                 type="text"
                                 id="bank-name"
@@ -500,7 +530,10 @@ const VendorRegistrationForm = () => {
                     </div>
                     
                     <div className="form-group">
+                    <div style={{ display: 'flex', alignItems: 'center' }}>
                         <label htmlFor="beneficiary-name" className="form-label">Beneficiary Name</label>
+                        <p style={{ color: 'red', margin: '0 0 0 5px', position: 'relative', top: '-3px' }}>*</p>
+                        </div>
                         <input
                                 type="text"
                                 id="beneficiary-name"
@@ -513,7 +546,10 @@ const VendorRegistrationForm = () => {
                     </div>
                     <div className="input-group">
                     <div className="form-group">
+                    <div style={{ display: 'flex', alignItems: 'center' }}>
                         <label htmlFor="account-number" className="form-label">Account Number</label>
+                        <p style={{ color: 'red', margin: '0 0 0 5px', position: 'relative', top: '-3px' }}>*</p>
+                        </div>
                         <input
                                 type="text"
                                 id="account-number"
@@ -525,7 +561,10 @@ const VendorRegistrationForm = () => {
                             />
                     </div>
                     <div className="form-group">
+                    <div style={{ display: 'flex', alignItems: 'center' }}>
                         <label htmlFor="ifsc-code" className="form-label">IFSC Code</label>
+                        <p style={{ color: 'red', margin: '0 0 0 5px', position: 'relative', top: '-3px' }}>*</p>
+                        </div>
                         <input
                                 type="text"
                                 id="ifsc-code"
@@ -537,7 +576,10 @@ const VendorRegistrationForm = () => {
                     </div>
                     </div>
                     <div className="form-group">
+                    <div style={{ display: 'flex', alignItems: 'center' }}>
                         <label htmlFor="cancelled-cheque" className="form-label">Cancelled Cheque</label>
+                        <p style={{ color: 'red', margin: '0 0 0 5px', position: 'relative', top: '-3px' }}>*</p>
+                        </div>
                         <input 
                         type="file" 
                         id="cancelled-cheque" 
