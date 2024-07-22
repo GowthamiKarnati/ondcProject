@@ -32,36 +32,11 @@ const VendorRegistrationForm = () => {
     const [notinterested, setNotinterested] = useState(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [submissionStatus, setSubmissionStatus] = useState(null);
-    console.log({
-        legalEntityName,
-        contactPersonName,
-        designation,
-        contactNumber,
-        emailId,
-        address,
-        state,
-        pinCode,
-        panCardNumber,
-        typeOfEntity,
-        isMsme,
-        udyamFiles,
-        isGst,
-        gstFiles,
-        gstNumber,
-        bankName,
-        beneficiaryName,
-        accountNumber,
-        ifscCode,
-        cancelledFiles,
-        interested, 
-        notinterested
-    }); 
-console.log({udyamFiles, gstFiles, cancelledFiles})
     const handleInputChange = (setter) => (event) => {
         setter(event.target.value);
     };
     const handleMsmeChange = (event) => {
-        console.log("Event", event.target.value === 'yes');
+        //console.log("Event", event.target.value === 'yes');
         setIsMsme(event.target.value === 'yes');
     };
 
@@ -83,7 +58,7 @@ console.log({udyamFiles, gstFiles, cancelledFiles})
         if (file) {
           try {
             const base64File = await convertFileToBase64(file);
-            console.log(base64File, file.type)
+            //console.log(base64File, file.type)
             await uploadBase64ToBackend(base64File, file.type, fileType);
           } catch (error) {
             console.error('Error converting file to Base64:', error);
@@ -109,7 +84,7 @@ console.log({udyamFiles, gstFiles, cancelledFiles})
             }
           );
           const { msg: { files } } = response.data;
-          console.log(response.data);
+          //console.log(response.data);
           switch (fileType) {
             case 'udyam':
                 setUdyamFiles(files);
