@@ -7,6 +7,7 @@ function App() {
   return (
     <Router>
       <Routes>
+        <Route path ='/' /> 
         <Route path="/invoice-upload" element={<VendorInvoiceUpload />} />
         <Route path="/register" element={<VendorRegistration />} />
       </Routes>
