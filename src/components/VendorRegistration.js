@@ -32,9 +32,10 @@ const VendorRegistrationForm = () => {
     const [notinterested, setNotinterested] = useState(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [submissionStatus, setSubmissionStatus] = useState(null);
-    console.log(typeOfEntity);
+    const [formError, setFormError]= useState(false);
     const handleInputChange = (setter) => (event) => {
         setter(event.target.value);
+        
     };
     const handleMsmeChange = (event) => {
         //console.log("Event", event.target.value === 'yes');
@@ -111,6 +112,13 @@ const VendorRegistrationForm = () => {
       };
     const handleSubmit = async(e) =>{
         e.preventDefault();
+       // console.log(!legalEntityName, !contactPersonName, !designation, !contactNumber, !emailId, !address, !state, !pinCode, !panCardNumber, !typeOfEntity)
+        
+        if(!legalEntityName || !contactPersonName || !designation || !contactNumber || !emailId || !address || !state || !pinCode || !panCardNumber || !typeOfEntity){
+            alert("Please fill all required feilds.");
+            return; 
+        }
+        else{
         setIsSubmitting(true);
         const data = {
             legalEntityName,
@@ -147,13 +155,16 @@ const VendorRegistrationForm = () => {
             )
             console.log(response.data)
             setSubmissionStatus('success');
+            setTimeout(()=>{
+                setSubmissionStatus(null)
+            }, 400000)
         }
         catch(err){
             console.log("Error", err)
             setSubmissionStatus('error')
             setTimeout(()=>{
                 setSubmissionStatus(null)
-            }, 3000)
+            }, 5000)
         }finally{
             setIsSubmitting(false);
             setLegalEntityName('');
@@ -183,6 +194,7 @@ const VendorRegistrationForm = () => {
             }
             
         }
+    }
 
     }
     return (
@@ -201,7 +213,10 @@ const VendorRegistrationForm = () => {
                 <div className="form-row">
                     <div className="input-group">
                         <div className="form-group">
+                            <div style={{display:'flex', flexDirection:'row'}}>
                             <label htmlFor="legal-entity-name" className="form-label" style={{ fontWeight: '700' }}>Legal Entity Name</label>
+                            <p style={{color:'red'}}>*</p>
+                            </div>
                             <input
                                 type="text"
                                 id="legal-entity-name"
@@ -209,11 +224,15 @@ const VendorRegistrationForm = () => {
                                 className="form-input"
                                 placeholder="Cheque will be issued in this name"
                                 value={legalEntityName}
-                                onChange={handleInputChange(setLegalEntityName)}
+                                onChange={
+                                    handleInputChange(setLegalEntityName)}
                             />
                         </div>
                         <div className="form-group">
+                            <div style={{display:'flex', flexDirection:'row'}}>
                             <label htmlFor="contact-person-name" className="form-label">Contact Person Name</label>
+                            <p style={{color:'red'}}>*</p>
+                            </div>
                             <input
                                 type="text"
                                 id="contact-person-name"
@@ -226,7 +245,10 @@ const VendorRegistrationForm = () => {
                     </div>
                     <div className="input-group">
                         <div className="form-group">
+                            <div style={{display:'flex', flexDirection:'row'}}>
                             <label htmlFor="designation" className="form-label">Designation</label>
+                            <p style={{color:'red'}}>*</p>
+                            </div>
                             <input
                                 type="text"
                                 id="designation"
@@ -237,7 +259,10 @@ const VendorRegistrationForm = () => {
                             />
                         </div>
                         <div className="form-group">
+                            <div style={{display:'flex', flexDirection:'row'}}>
                             <label htmlFor="contact-number" className="form-label">Contact Number</label>
+                            <p style={{color:'red'}}>*</p>
+                            </div>
                             <input
                                 type="text"
                                 id="contact-number"
@@ -250,7 +275,10 @@ const VendorRegistrationForm = () => {
                     </div>
                     <div className="input-group">
                         <div className="form-group">
+                            <div style={{display:'flex', flexDirection:'row'}}>
                             <label htmlFor="email-id" className="form-label">Email ID</label>
+                            <p style={{color:'red'}}>*</p>
+                            </div>
                             <input
                                 type="email"
                                 id="email-id"
@@ -261,7 +289,10 @@ const VendorRegistrationForm = () => {
                             />
                         </div>
                         <div className="form-group">
+                            <div style={{display:'flex', flexDirection:'row'}}>
                             <label htmlFor="address" className="form-label">Address</label>
+                            <p style={{color:'red'}}>*</p>
+                            </div>
                             <input
                                 type="text"
                                 id="address"
@@ -274,7 +305,10 @@ const VendorRegistrationForm = () => {
                     </div>
                     <div className="input-group">
                         <div className="form-group">
+                            <div style={{display:'flex', flexDirection:'row'}}> 
                             <label htmlFor="state" className="form-label">State</label>
+                            <p style={{color:'red'}}>*</p>
+                            </div>
                             <input
                                 type="text"
                                 id="state"
@@ -285,7 +319,10 @@ const VendorRegistrationForm = () => {
                             />
                         </div>
                         <div className="form-group">
+                            <div style={{display:'flex', flexDirection:'row'}}> 
                             <label htmlFor="pin-code" className="form-label">Pin Code</label>
+                            <p style={{color:'red'}}>*</p>
+                            </div>
                             <input
                                 type="text"
                                 id="pin-code"
@@ -298,7 +335,10 @@ const VendorRegistrationForm = () => {
                     </div>
                     <div className="input-group">
                         <div className="form-group">
+                            <div style={{display:'flex', flexDirection:'row'}}> 
                             <label htmlFor="pan-card-number" className="form-label">PAN Card Number</label>
+                            <p style={{color:'red'}}>*</p>
+                            </div>
                             <input
                                 type="text"
                                 id="pan-card-number"
@@ -309,7 +349,10 @@ const VendorRegistrationForm = () => {
                             />
                         </div>
                         <div className="form-group">
+                            <div style={{display:'flex', flexDirection:'row'}}> 
                             <label htmlFor="type-of-entity" className="form-label">Type of Entity</label>
+                            <p style={{color:'red'}}>*</p>
+                            </div>
                             <select
                                 id="type-of-entity"
                                 name="type-of-entity"
@@ -472,6 +515,7 @@ const VendorRegistrationForm = () => {
                                 className="form-input"
                                 value={accountNumber}
                                 onChange={handleInputChange(setAccountNumber)}
+                                //onFocus={setFormError(false)}
                             />
                     </div>
                     <div className="form-group">
@@ -553,6 +597,7 @@ const VendorRegistrationForm = () => {
                             {isSubmitting ? "Submitting..." : "Submit"}
                             </button>
                     </div>
+                    
                     {submissionStatus === 'success' && <div style={{color:'green'}}>
                     Vendor Registration Details Successfully Submitted!
                     <br></br>

@@ -50,7 +50,7 @@ const VendorInvoiceUpload = () => {
   const handlefilter = async(e) =>{
     const { value } = e.target;
     const cleanedValue = value.replace(/\s/g, '');
-   console.log("value", cleanedValue);
+   //console.log("value", cleanedValue);
    try{
     setLoaderforName(true);
     const encodedValue = encodeURIComponent(cleanedValue);
@@ -61,7 +61,7 @@ const VendorInvoiceUpload = () => {
     setVendorNames(response.data.data[0]['Legal Entity Name'])
     const encodedDept = encodeURIComponent(dept)
     const responseforOndc = await axios.get(`${baseUrl}/vendordept?dept=${encodedDept}`);
-    console.log(responseforOndc.data.data);
+    //console.log(responseforOndc.data.data);
     const ondcNames= responseforOndc.data.data.map(dept=> ({id: dept.record_id, value: dept.Name}))
     setPocName(ondcNames);
    }catch(err){
@@ -117,6 +117,10 @@ const VendorInvoiceUpload = () => {
 
 const handleSubmit = async (e) => {
     e.preventDefault();
+    if (loading) { // Prevent form submission while file is uploading
+        alert("Please wait until the file upload is complete.");
+        return;
+      }
     setLoaderSubmit(true)
     let ondcContactPOCInfo = { id: '', value: '' };
   
@@ -207,7 +211,10 @@ const handleSubmit = async (e) => {
                   value={vendorPanNumber}
                   onChange={(e) => {
                     handleChange(e);
-                    handlefilter(e);
+                    //handlefilter(e);
+                }}
+                onBlur={(e)=>{
+                    handlefilter(e)
                 }}
                 />
               </div>
@@ -219,14 +226,14 @@ const handleSubmit = async (e) => {
                   value={vendorName}
                   onChange={handleChange}
                 >
-                  <option value="">Select Vendor</option>
+                  <option value="" disabled >Select Vendor</option>
                   {loaderforName ? 
-                  (<option>Getting vendor name...</option>)
+                  (<option disabled>Getting vendor name...</option>)
                   :
                   (vendorNames ? (
                     <option  value={vendorNames}>{vendorNames}</option>
                   ) : (
-                    <option value="">No vender names available</option>
+                    <option value=""disabled>No vender names available</option>
                   ) )}
                 </select>
               </div>
@@ -298,7 +305,12 @@ const handleSubmit = async (e) => {
                 </button>
               <button type="reset" className="clear-button">Clear</button>
             </div>
-            {submissionStatus === 'success' && <div style={{color:'green'}}>Form submitted successfully!</div>}
+            {submissionStatus === 'success' && <div style={{color:'green'}}>
+            Thank you for uploading your invoice to the system. 
+            Your invoice is currently being processed and will go through various stages of approval. 
+            We will notify you of its status at each stage.
+            Thank you for your patience.
+                </div>}
             {submissionStatus === 'error' && <div style={{color:'red'}}>Error submitting form. Please try again.</div>}
           </form>
         </div>
