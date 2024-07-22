@@ -150,9 +150,6 @@ console.log({udyamFiles, gstFiles, cancelledFiles})
             )
             console.log(response.data)
             setSubmissionStatus('success');
-            setTimeout(()=>{
-                setSubmissionStatus(null)
-            }, 2000)
         }
         catch(err){
             console.log("Error", err)
@@ -487,7 +484,14 @@ console.log({udyamFiles, gstFiles, cancelledFiles})
                             {isSubmitting ? "Submitting..." : "Submit"}
                             </button>
                     </div>
-                    {submissionStatus === 'success' && <div style={{color:'green'}}>Form submitted successfully!</div>}
+                    {submissionStatus === 'success' && <div style={{color:'green'}}>
+                    Vendor Registration Details Successfully Submitted!
+                    <br></br>
+                    <br></br>
+        
+
+Thank you for providing your vendor registration details. Your information has been successfully captured and recorded in our system. We will review the submitted details and get back to you if any additional information is needed. Please keep an eye on your email for further communication from our team. If you have any immediate questions or concerns, feel free to contact our support team.
+                        </div>}
                     {submissionStatus === 'error' && <div style={{color:'red'}}>Error submitting form. Please try again.</div>}
                 </div>
             </form>
