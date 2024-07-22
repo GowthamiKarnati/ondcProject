@@ -216,10 +216,13 @@ const VendorRegistrationForm = () => {
                 <div className="form-row">
                     <div className="input-group">
                         <div className="form-group">
-                            <div style={{display:'flex',alignItems:'center'}}>
-                            <label htmlFor="legal-entity-name" className="form-label" style={{ fontWeight: '700' }}>Legal Entity Name</label>
-                            <p style={{color:'red'}}>*</p>
-                            </div>
+                        <div style={{ display: 'flex', alignItems: 'center' }}>
+                            <label htmlFor="legal-entity-name" className="form-label" style={{ fontWeight: '700' }}>
+                                Legal Entity Name
+                            </label>
+                            <p style={{ color: 'red', margin: '0 0 0 5px', position: 'relative', top: '-3px' }}>*</p>
+                        </div>
+
                             <input
                                 type="text"
                                 id="legal-entity-name"
