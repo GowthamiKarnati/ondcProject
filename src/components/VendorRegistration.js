@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState,useRef } from 'react';
 import '../VendorRegistration.css'
 import axios from 'axios';
 const baseUrl = 'https://backendforpnf.vercel.app'
 const VendorRegistrationForm = () => {
+    const fileInputRef = useRef(null);
     const [legalEntityName, setLegalEntityName] = useState('');
     //console.log(legalEntityName);
     const [contactPersonName, setContactPersonName] = useState('');
@@ -14,8 +15,8 @@ const VendorRegistrationForm = () => {
     const [pinCode, setPinCode] = useState('');
     const [panCardNumber, setPanCardNumber] = useState('');
     const [typeOfEntity, setTypeOfEntity] = useState('');
-    const [isMsme, setIsMsme] = useState(false);
-    const [isGst, setIsGst] = useState(false);
+    const [isMsme, setIsMsme] = useState(null);
+    const [isGst, setIsGst] = useState(null);
     const [gstNumber, setGstNumber] = useState('');
     const [bankName, setBankName] = useState('');
     const [beneficiaryName, setBeneficiaryName] = useState('');
@@ -27,13 +28,32 @@ const VendorRegistrationForm = () => {
     const [cancelledFiles, setCancelledFiles] = useState([]);
     const [gstuploading, setGstUploading] = useState(false);
     const [chequeuploading, setChequeUploading] = useState(false);
-    const [interested, setInterested] = useState(false);
-    const [notinterested, setNotinterested] = useState(false);
+    const [interested, setInterested] = useState(null);
+    const [notinterested, setNotinterested] = useState(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [submissionStatus, setSubmissionStatus] = useState(null);
     console.log({
-
-        interested,
+        legalEntityName,
+        contactPersonName,
+        designation,
+        contactNumber,
+        emailId,
+        address,
+        state,
+        pinCode,
+        panCardNumber,
+        typeOfEntity,
+        isMsme,
+        udyamFiles,
+        isGst,
+        gstFiles,
+        gstNumber,
+        bankName,
+        beneficiaryName,
+        accountNumber,
+        ifscCode,
+        cancelledFiles,
+        interested, 
         notinterested
     }); 
 console.log({udyamFiles, gstFiles, cancelledFiles})
@@ -41,6 +61,7 @@ console.log({udyamFiles, gstFiles, cancelledFiles})
         setter(event.target.value);
     };
     const handleMsmeChange = (event) => {
+        console.log("Event", event.target.value === 'yes');
         setIsMsme(event.target.value === 'yes');
     };
 
@@ -159,11 +180,45 @@ console.log({udyamFiles, gstFiles, cancelledFiles})
             }, 3000)
         }finally{
             setIsSubmitting(false);
+            setLegalEntityName('');
+            setContactPersonName('');
+            setDesignation('');
+            setContactNumber('');
+            setEmailId('');
+            setAddress('');
+            setState('');
+            setPinCode('');
+            setPanCardNumber('');
+            setTypeOfEntity('');
+            setIsMsme(null);
+            setIsGst(null);
+            setGstNumber('');
+            setBankName('');
+            setBeneficiaryName('');
+            setAccountNumber('');
+            setIfscCode('');
+            setUdyamFiles([]);
+            setGstFiles([]);
+            setCancelledFiles([]);
+            setInterested(null);
+            setNotinterested(null)
+            if (fileInputRef.current) {
+                fileInputRef.current.value = '';
+            }
             
         }
 
     }
     return (
+        <div className="main-container">
+            <nav className="navbar">
+                <div className="container">
+                <span className="title">Vendor Portal</span>
+                <a href="https://ondc.org/assets/theme/images/ondc_registered_logo.svg?v=bfe185127c" target="_blank" rel="noopener noreferrer" className="logo">
+                    <img src="https://ondc.org/assets/theme/images/ondc_registered_logo.svg?v=bfe185127c" alt="ONDC Logo" />
+                </a>
+                </div>
+            </nav>
         <div className="form-container">
             <h2 className="form-title">Vendor Registration Form</h2>
             <form id="business-partner-form" onSubmit={handleSubmit} encType="multipart/form-data">
@@ -306,11 +361,27 @@ console.log({udyamFiles, gstFiles, cancelledFiles})
                         </div>
                         <div className="form-radio-group">
                             <div className="form-radio-option">
-                                <input id="msme-yes" name="msme" type="radio" value="yes" onChange={handleMsmeChange} className="form-radio-input" />
+                                <input 
+                                id="msme-yes" 
+                                name="msme" 
+                                type="radio" 
+                                value="yes" 
+                                onChange={handleMsmeChange} 
+                                className="form-radio-input" 
+                                checked={isMsme === true}
+                                />
                                 <label htmlFor="msme-yes" className="form-radio-label">Yes</label>
                             </div>
                             <div className="form-radio-option">
-                                <input id="msme-no" name="msme" type="radio" value="no" onChange={handleMsmeChange} className="form-radio-input" />
+                                <input 
+                                id="msme-no" 
+                                name="msme" 
+                                type="radio" 
+                                value="no" 
+                                onChange={handleMsmeChange} 
+                                className="form-radio-input" 
+                                checked={isMsme === false}
+                                />
                                 <label htmlFor="msme-no" className="form-radio-label">No</label>
                             </div>
                         </div>
@@ -324,6 +395,7 @@ console.log({udyamFiles, gstFiles, cancelledFiles})
                             id="udyam-certificate" 
                             name="udyam-certificate" 
                             className="form-file-input" 
+                            //ref={fileInputRef}
                             onChange={(e) => {
                                 handleFileChange(e, 'udyam');
                               }}
@@ -338,11 +410,27 @@ console.log({udyamFiles, gstFiles, cancelledFiles})
                         </div>
                             <div className="form-radio-group">
                                 <div className="form-radio-option">
-                                    <input id="gst-yes" name="gst" type="radio" value="yes" onChange={handleGstChange} className="form-radio-input" />
+                                    <input
+                                    id="gst-yes" 
+                                    name="gst" 
+                                    type="radio" 
+                                    value="yes" 
+                                    onChange={handleGstChange} 
+                                    className="form-radio-input"
+                                    checked={isGst === true} 
+                                    />
                                     <label htmlFor="gst-yes" className="form-radio-label">Yes</label>
                                 </div>
                                 <div className="form-radio-option">
-                                    <input id="gst-no" name="gst" type="radio" value="no" onChange={handleGstChange} className="form-radio-input" />
+                                    <input 
+                                    id="gst-no" 
+                                    name="gst" 
+                                    type="radio" 
+                                    value="no" 
+                                    onChange={handleGstChange} 
+                                    className="form-radio-input" 
+                                    checked={isGst === false}
+                                    />
                                     <label htmlFor="gst-no" className="form-radio-label">No</label>
                                 </div>
                             </div>
@@ -355,6 +443,7 @@ console.log({udyamFiles, gstFiles, cancelledFiles})
                             id="gst-certificate" 
                             name="gst-certificate" 
                             className="form-file-input" 
+                            //ref={fileInputRef}
                             onChange={(e) => {
                                 handleFileChange(e, 'gst');
                               }}
@@ -427,6 +516,7 @@ console.log({udyamFiles, gstFiles, cancelledFiles})
                         id="cancelled-cheque" 
                         name="cancelled-cheque" 
                         className="form-file-input" 
+                        ref={fileInputRef}
                         onChange={(e) => {
                             handleFileChange(e, 'cheque');
                           }}
@@ -445,9 +535,10 @@ console.log({udyamFiles, gstFiles, cancelledFiles})
                                         type="radio" 
                                         value="yes" 
                                         class="code-of-conduct-radio"
+                                        checked ={interested === true}
                                         onChange={(e)=>{
                                             setInterested(e.target.value === 'yes')
-                                            setNotinterested(e.target.value === false)
+                                            setNotinterested(e.target.value === 'no')
                                         }}
                                     />
                                     <label 
@@ -464,9 +555,10 @@ console.log({udyamFiles, gstFiles, cancelledFiles})
                                         type="radio" 
                                         value="yes" 
                                         class="code-of-conduct-radio"
+                                        checked={notinterested === true}
                                         onChange={(e)=>{
                                             setNotinterested(e.target.value === 'yes')
-                                            setInterested(e.target.value === false)
+                                            setInterested(e.target.value === 'no')
                                         }}
                                     />
                                     <label 
@@ -488,13 +580,16 @@ console.log({udyamFiles, gstFiles, cancelledFiles})
                     Vendor Registration Details Successfully Submitted!
                     <br></br>
                     <br></br>
-        
-
-Thank you for providing your vendor registration details. Your information has been successfully captured and recorded in our system. We will review the submitted details and get back to you if any additional information is needed. Please keep an eye on your email for further communication from our team. If you have any immediate questions or concerns, feel free to contact our support team.
+                     Thank you for providing your vendor registration details. 
+                     Your information has been successfully captured and recorded in our system. 
+                     We will review the submitted details and get back to you if any additional information is needed. 
+                     Please keep an eye on your email for further communication from our team. 
+                     If you have any immediate questions or concerns, feel free to contact our support team.
                         </div>}
                     {submissionStatus === 'error' && <div style={{color:'red'}}>Error submitting form. Please try again.</div>}
                 </div>
             </form>
+        </div>
         </div>
     );
 };

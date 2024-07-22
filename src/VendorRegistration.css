@@ -1,8 +1,44 @@
 /* Container for the form */
 @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap');
 body {
-    font-family: 'Roboto', sans-serif;
-}
+    background-color: #f7fafc;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    margin: 0;
+    font-family: Arial, sans-serif;
+  }
+  .navbar {
+    background-color: #3c82f6;
+    color: white;
+    padding: 1rem;
+    font-weight: bold;
+  }
+  
+  .navbar .container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  
+  .navbar .logo img {
+    height: 2.5rem;
+  }
+  .title {
+    font-size: 1.3rem; /* Adjust the size as needed */
+    font-weight: bold;
+    color: white;
+    margin-right: 5rem; 
+    
+  }
+  .main-content {
+    flex-grow: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+    
+  }
 .form-container {
     width: 80%;
     margin: auto;
