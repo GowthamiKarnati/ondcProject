@@ -32,6 +32,7 @@ const VendorRegistrationForm = () => {
     const [notinterested, setNotinterested] = useState(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [submissionStatus, setSubmissionStatus] = useState(null);
+    console.log(typeOfEntity);
     const handleInputChange = (setter) => (event) => {
         setter(event.target.value);
     };
@@ -316,6 +317,7 @@ const VendorRegistrationForm = () => {
                                 value={typeOfEntity}
                                 onChange={handleInputChange(setTypeOfEntity)}
                             >
+                                <option value="" disabled>Select Entity Type</option>
                                 <option value="Private Limited">Private Limited</option>
                                 <option value="Public Limited">Public Limited</option>
                                 <option value="LLP">LLP</option>
