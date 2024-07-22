@@ -7,7 +7,7 @@ function App() {
   return (
     <Router>
       <Routes>
-        <Route path="/" element={<VendorInvoiceUpload />} />
+        <Route path="/invoice-upload" element={<VendorInvoiceUpload />} />
         <Route path="/register" element={<VendorRegistration />} />
       </Routes>
     </Router>
