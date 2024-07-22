@@ -112,6 +112,7 @@ const VendorRegistrationForm = () => {
       };
     const handleSubmit = async(e) =>{
         e.preventDefault();
+        
         if (uploading || gstuploading || chequeuploading) {
         alert("Please wait until the file upload is complete.");
         return;

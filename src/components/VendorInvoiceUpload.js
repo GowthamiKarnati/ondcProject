@@ -157,11 +157,6 @@ const handleSubmit = async (e) => {
       );
       console.log('Server response:', response.data);
       setSubmissionStatus('success');
-      
-      setTimeout(()=>{
-        setSubmissionStatus(null)
-        handleReset()
-      }, 2000)
     } catch (error) {
       console.error('Error submitting form:', error);
       setSubmissionStatus('error');
@@ -170,6 +165,7 @@ const handleSubmit = async (e) => {
       }, 3000)
     }finally{
       setLoaderSubmit(false)
+      handleReset()
     }
   };
 
