@@ -144,7 +144,7 @@ const VendorRegistrationForm = () => {
                     },
                   }
             )
-            console.log(response.data)
+            //console.log(response.data)
             setSubmissionStatus('success');
         }
         catch(err){
