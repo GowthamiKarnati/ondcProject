@@ -316,16 +316,16 @@ const VendorRegistrationForm = () => {
                                 value={typeOfEntity}
                                 onChange={handleInputChange(setTypeOfEntity)}
                             >
-                                <option value="private-limited">Private Limited</option>
-                                <option value="public-limited">Public Limited</option>
-                                <option value="llp">LLP</option>
-                                <option value="sole-proprietorship">Sole Proprietorship</option>
-                                <option value="partnership">Partnership</option>
-                                <option value="huf">HUF</option>
-                                <option value="section-8">Section 8</option>
-                                <option value="societies">Societies</option>
-                                <option value="trust">Trust</option>
-                                <option value="self-help-group">Self Help Group</option>
+                                <option value="Private Limited">Private Limited</option>
+                                <option value="Public Limited">Public Limited</option>
+                                <option value="LLP">LLP</option>
+                                <option value="Sole Proprietorship">Sole Proprietorship</option>
+                                <option value="Partnership">Partnership</option>
+                                <option value="HUF">HUF</option>
+                                <option value="Section 8">Section 8</option>
+                                <option value="Societies">Societies</option>
+                                <option value="Trust">Trust</option>
+                                <option value="Self Help Group">Self Help Group</option>
                             </select>
                         </div>
                     </div>
