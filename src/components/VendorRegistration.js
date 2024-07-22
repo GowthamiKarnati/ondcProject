@@ -112,8 +112,10 @@ const VendorRegistrationForm = () => {
       };
     const handleSubmit = async(e) =>{
         e.preventDefault();
-       // console.log(!legalEntityName, !contactPersonName, !designation, !contactNumber, !emailId, !address, !state, !pinCode, !panCardNumber, !typeOfEntity)
-        
+        if (uploading || gstuploading || chequeuploading) {
+        alert("Please wait until the file upload is complete.");
+        return;
+        }
         if(!legalEntityName || !contactPersonName || !designation || !contactNumber || !emailId || !address || !state || !pinCode || !panCardNumber || !typeOfEntity){
             alert("Please fill all required feilds.");
             return; 
@@ -149,9 +151,9 @@ const VendorRegistrationForm = () => {
                 data,
                 {
                     headers: {
-                      'Content-Type': 'application/json',
+                        'Content-Type': 'application/json',
                     },
-                  }
+                    }
             )
             console.log(response.data)
             setSubmissionStatus('success');
@@ -192,8 +194,8 @@ const VendorRegistrationForm = () => {
             if (fileInputRef.current) {
                 fileInputRef.current.value = '';
             }
-            
-        }
+                
+            }
     }
 
     }
@@ -598,7 +600,7 @@ const VendorRegistrationForm = () => {
                             </button>
                     </div>
                     
-                    {submissionStatus === 'success' && <div style={{color:'green'}}>
+                    {submissionStatus === 'success' && <div style={{color:'green', fontSize:'18'}}>
                     Vendor Registration Details Successfully Submitted!
                     <br></br>
                     <br></br>

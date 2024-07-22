@@ -305,10 +305,13 @@ const handleSubmit = async (e) => {
                 </button>
               <button type="reset" className="clear-button">Clear</button>
             </div>
-            {submissionStatus === 'success' && <div style={{color:'green'}}>
-            Thank you for uploading your invoice to the system. 
+            {submissionStatus === 'success' && <div style={{color:'green', fontSize:'18'}}>
+            Thank you for uploading your invoice to the system.
+            <br></br> 
+            <br></br>
             Your invoice is currently being processed and will go through various stages of approval. 
             We will notify you of its status at each stage.
+            <br></br>
             Thank you for your patience.
                 </div>}
             {submissionStatus === 'error' && <div style={{color:'red'}}>Error submitting form. Please try again.</div>}
