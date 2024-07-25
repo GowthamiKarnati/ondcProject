@@ -130,7 +130,7 @@ const VendorInvoiceUpload = () => {
       //console.log(response.data.data.length)
       if (response.data.data.length > 0) {
         const poc = response.data.data[0];
-        //console.log("pOC", poc);
+       // console.log("pOC", poc);
        setPocName([{ id: poc.record_id, value: poc.Name}]); // Adjust column ID for POC name
         setPocEmailStatus('');
       } else {
