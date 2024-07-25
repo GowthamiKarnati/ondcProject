@@ -340,7 +340,7 @@ const handleSubmit = async (e) => {
                   (pocName?.map((poc, index) => (
                     <option key={index} value={JSON.stringify(poc)}>{poc.value}</option>
                   ))): (
-                    <option value="">No POC avaliable</option>
+                    <option value="" disabled>No POC avaliable</option>
                   ))}
                 </select>
               </div>
