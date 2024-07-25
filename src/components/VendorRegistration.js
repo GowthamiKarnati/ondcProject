@@ -16,7 +16,6 @@ const VendorRegistrationForm = () => {
     const [panCardNumber, setPanCardNumber] = useState('');
     const [typeOfEntity, setTypeOfEntity] = useState('');
     const [isMsme, setIsMsme] = useState(null);
-    //console.log(isMsme);
     const [isGst, setIsGst] = useState(null);
     const [gstNumber, setGstNumber] = useState('');
     const [bankName, setBankName] = useState('');
@@ -33,13 +32,10 @@ const VendorRegistrationForm = () => {
     const [notinterested, setNotinterested] = useState(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [submissionStatus, setSubmissionStatus] = useState(null);
-    const [formError, setFormError]= useState(false);
     const handleInputChange = (setter) => (event) => {
-        setter(event.target.value);
-        
+        setter(event.target.value);   
     };
     const handleMsmeChange = (event) => {
-        //console.log("Event", event.target.value === 'yes');
         setIsMsme(event.target.value === 'yes');
     };
 
@@ -57,11 +53,9 @@ const VendorRegistrationForm = () => {
     
       const handleFileChange = async (e, fileType) => {
         const file = e.target.files[0];
-        //setInvoiceCopy(file);
         if (file) {
           try {
             const base64File = await convertFileToBase64(file);
-            //console.log(base64File, file.type)
             await uploadBase64ToBackend(base64File, file.type, fileType);
           } catch (error) {
             console.error('Error converting file to Base64:', error);
@@ -75,8 +69,9 @@ const VendorRegistrationForm = () => {
                 case 'udyam':setUploading(true); break;
                 case 'gst': setGstUploading(true); break;
                 case 'cheque': setChequeUploading(true); break; 
+                default:
+                break;
             }
-          
           const response = await axios.post(
             `${baseUrl}/vendorfileUpload`,
             { base64Data, mimeType },
@@ -107,117 +102,101 @@ const VendorRegistrationForm = () => {
             switch(fileType){
                 case 'udyam':setUploading(false); break;
                 case 'gst': setGstUploading(false); break;
-                case 'cheque': setChequeUploading(false); break; 
+                case 'cheque': setChequeUploading(false); break;
+                default:
+                    break; 
             }
         }
       };
     const handleSubmit = async(e) =>{
         e.preventDefault();
-        if(!legalEntityName || !contactPersonName || !designation || !contactNumber || !emailId || !address || !state || !pinCode || !panCardNumber || !typeOfEntity || !bankName || !beneficiaryName || !accountNumber || !ifscCode ||  (isGst && !gstNumber)){
-            alert("Please fill all required feilds.");
-            return; 
-        }
-        if (isMsme === null) {
+        if (!legalEntityName || !contactPersonName || !designation || !contactNumber || !emailId || !address || !state || !pinCode || !panCardNumber || !typeOfEntity || !bankName || !beneficiaryName || !accountNumber || !ifscCode || (isGst && !gstNumber)) {
+            alert("Please fill all required fields.");
+        } else if (isMsme === null) {
             alert('Please select whether you are registered under the MSME Act.');
-            return;
-        }
-        if(isGst === null){
+        } else if (isGst === null) {
             alert('Please select whether you are registered GST.');
-            return;
-        }
-        if (isMsme && udyamFiles.length === 0) {
+        } else if (isMsme && udyamFiles.length === 0) {
             alert('Please upload the required MSME certificate.');
-            return;
-          }
-        
-          if (isGst && gstFiles.length === 0) {
+        } else if (isGst && gstFiles.length === 0) {
             alert('Please upload the required GST certificate.');
-            return;
-          }
-        
-          if (cancelledFiles.length === 0) {
+        } else if (cancelledFiles.length === 0) {
             alert('Please upload the cancelled cheque.');
-            return;
-          }
-        if (!interested && !notinterested) {
+        } else if (!interested && !notinterested) {
             alert('Please select an option for the Business Partner Code of Conduct.');
-            return;
-        }
-        setIsSubmitting(true);
-        const data = {
-            legalEntityName,
-            contactPersonName,
-            designation,
-            contactNumber,
-            emailId,
-            address,
-            state,
-            pinCode,
-            panCardNumber,
-            typeOfEntity,
-            isMsme,
-            udyamFiles,
-            isGst,
-            gstFiles,
-            gstNumber,
-            bankName,
-            beneficiaryName,
-            accountNumber,
-            ifscCode,
-            cancelledFiles,
-            interested, 
-            notinterested
-        }
-        try{
-            const response = await axios.post(`${baseUrl}/createvendor`, 
-                data,
-                {
+        } 
+        else {
+            setIsSubmitting(true);
+            const data = {
+                legalEntityName,
+                contactPersonName,
+                designation,
+                contactNumber,
+                emailId,
+                address,
+                state,
+                pinCode,
+                panCardNumber,
+                typeOfEntity,
+                isMsme,
+                udyamFiles,
+                isGst,
+                gstFiles,
+                gstNumber,
+                bankName,
+                beneficiaryName,
+                accountNumber,
+                ifscCode,
+                cancelledFiles,
+                interested,
+                notinterested
+            };
+            try {
+                await axios.post(`${baseUrl}/createvendor`, data, {
                     headers: {
                         'Content-Type': 'application/json',
                     },
-                    }
-            )
-            //console.log(response.data)
-            setSubmissionStatus('success');
-            setTimeout(()=>{
-                setSubmissionStatus(null)
-            }, 400000)
-        }
-        catch(err){
-            console.log("Error", err)
-            setSubmissionStatus('error')
-            setTimeout(()=>{
-                setSubmissionStatus(null)
-            }, 5000)
-        }finally{
-            setIsSubmitting(false);
-            setLegalEntityName('');
-            setContactPersonName('');
-            setDesignation('');
-            setContactNumber('');
-            setEmailId('');
-            setAddress('');
-            setState('');
-            setPinCode('');
-            setPanCardNumber('');
-            setTypeOfEntity('');
-            setIsMsme(null);
-            setIsGst(null);
-            setGstNumber('');
-            setBankName('');
-            setBeneficiaryName('');
-            setAccountNumber('');
-            setIfscCode('');
-            setUdyamFiles([]);
-            setGstFiles([]);
-            setCancelledFiles([]);
-            setInterested(null);
-            setNotinterested(null)
-            if (fileInputRef.current) {
-                fileInputRef.current.value = '';
+                });
+    
+                setSubmissionStatus('success');
+                setTimeout(() => {
+                    setSubmissionStatus(null);
+                }, 4000);
+            } catch (err) {
+                console.error("Error:", err);
+                setSubmissionStatus('error');
+                setTimeout(() => {
+                    setSubmissionStatus(null);
+                }, 5000);
+            } finally {
+                setIsSubmitting(false);
+                setLegalEntityName('');
+                setContactPersonName('');
+                setDesignation('');
+                setContactNumber('');
+                setEmailId('');
+                setAddress('');
+                setState('');
+                setPinCode('');
+                setPanCardNumber('');
+                setTypeOfEntity('');
+                setIsMsme(null);
+                setIsGst(null);
+                setGstNumber('');
+                setBankName('');
+                setBeneficiaryName('');
+                setAccountNumber('');
+                setIfscCode('');
+                setUdyamFiles([]);
+                setGstFiles([]);
+                setCancelledFiles([]);
+                setInterested(null);
+                setNotinterested(null);
+                if (fileInputRef.current) {
+                    fileInputRef.current.value = '';
+                }
             }
-    }
-
+        }
     }
     return (
         <div className="main-container">
@@ -592,18 +571,18 @@ const VendorRegistrationForm = () => {
                         />
                         {chequeuploading && <div style={{color:'green'}}>Uploading...</div>}
                     </div>
-                    <div class="col-span-1 md:col-span-2">
-                        <div class ="form-question-label">
+                    <div className="col-span-1 md:col-span-2">
+                        <div className ="form-question-label">
                             Business Partner Code of Conduct
                             </div>
-                            <div class="form-radio-group">
-                                <div class="form-radio-option">
+                            <div className="form-radio-group">
+                                <div className="form-radio-option">
                                     <input 
                                         id="bp-code-yes" 
                                         name="bp-code" 
                                         type="radio" 
                                         value="yes" 
-                                        class="code-of-conduct-radio"
+                                        className="code-of-conduct-radio"
                                         checked ={interested === true}
                                         onChange={(e)=>{
                                             setInterested(e.target.value === 'yes')
@@ -611,19 +590,19 @@ const VendorRegistrationForm = () => {
                                         }}
                                     />
                                     <label 
-                                        for="bp-code-yes" 
+                                        htmlFor="bp-code-yes" 
                                         style={{color:'black', marginLeft:'15px', fontSize:'15px'}}
                                     >
                                         I have read and understood the Business Partner Code of Conduct uploaded on the link above and hereby accept to abide by the same throughout the period of partnership with ONDC
                                     </label>
                                 </div>
-                                <div class="form-radio-option">
+                                <div className="form-radio-option">
                                     <input 
                                         iid="bp-code-yes" 
                                         name="bp-code" 
                                         type="radio" 
                                         value="yes" 
-                                        class="code-of-conduct-radio"
+                                        className="code-of-conduct-radio"
                                         checked={notinterested === true}
                                         onChange={(e)=>{
                                             setNotinterested(e.target.value === 'yes')
@@ -631,7 +610,7 @@ const VendorRegistrationForm = () => {
                                         }}
                                     />
                                     <label 
-                                        for="bp-code-no" 
+                                        htmlFor="bp-code-no" 
                                         style={{color:'black', marginLeft:'15px',fontSize:'15px'}}
                                     >
                                         I have read and understood the Business Partner Code of Conduct uploaded on the link above and have my reservations in complying with the same. Hence, I do not wish to continue with the partnership with ONDC

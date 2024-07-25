@@ -9,7 +9,6 @@ const VendorInvoiceUpload = () => {
   const [vendorName, setVendorName] = useState('');
   const [invoiceDate, setInvoiceDate] = useState('');
   const [invoiceValue, setInvoiceValue] = useState('');
-  const [invoiceCopy, setInvoiceCopy] = useState(null);
   const [purchaseOrderNumber, setPurchaseOrderNumber] = useState('');
   const [ondcContactPoc, setOndcContactPoc] = useState('');
   const [submissionStatus, setSubmissionStatus] = useState(null);
@@ -21,6 +20,9 @@ const VendorInvoiceUpload = () => {
   const [recordId, setRecordID] = useState('')
   const [loaderSubmit, setLoaderSubmit]= useState(false);
   const [loaderforName, setLoaderforName]= useState(false);
+  const [ondcContactEmail, setOndcContactEmail] = useState('');
+  const [pocEmailStatus, setPocEmailStatus] = useState('');
+  const [loaderforPoc, setLoaderforPoc] = useState(false);
   const handleChange = (e) => {
     const { name, value } = e.target;
     switch (name) {
@@ -43,6 +45,9 @@ const VendorInvoiceUpload = () => {
       case 'ondcContactPoc':
         setOndcContactPoc(value);
         break;
+      case 'ondcContactEmail':
+        setOndcContactEmail(value);
+        break;
       default:
         break;
     }
@@ -57,13 +62,13 @@ const VendorInvoiceUpload = () => {
     //console.log("Encoded", encodedValue);
     const response = await axios.get(`${baseUrl}/vendor?cleanedValue=${encodedValue}`);
     setRecordID(response.data.data[0].record_id)
-    const dept = response.data.data[0]['Dept'];
+    //const dept = response.data.data[0]['Dept'];
     setVendorNames(response.data.data[0]['Legal Entity Name'])
-    const encodedDept = encodeURIComponent(dept)
-    const responseforOndc = await axios.get(`${baseUrl}/vendordept?dept=${encodedDept}`);
-    //console.log(responseforOndc.data.data);
-    const ondcNames= responseforOndc.data.data.map(dept=> ({id: dept.record_id, value: dept.Name}))
-    setPocName(ondcNames);
+    // const encodedDept = encodeURIComponent(dept)
+    // const responseforOndc = await axios.get(`${baseUrl}/vendordept?dept=${encodedDept}`);
+    // //console.log(responseforOndc.data.data);
+    // const ondcNames= responseforOndc.data.data.map(dept=> ({id: dept.record_id, value: dept.Name}))
+    // setPocName(ondcNames);
    }catch(err){
       console.log(err);
    }
@@ -83,7 +88,6 @@ const VendorInvoiceUpload = () => {
 
   const handleFileChange = async (e) => {
     const file = e.target.files[0];
-    setInvoiceCopy(file);
     if (file) {
       try {
         const base64File = await convertFileToBase64(file);
@@ -114,7 +118,34 @@ const VendorInvoiceUpload = () => {
       setLoading(false);
     }
   };
-
+  const handlePocEmailChange = async (e) => {
+    const { value } = e.target;
+    //console.log("email", value)
+    setOndcContactEmail(value);
+    
+    try {
+      setLoaderforPoc(true);
+      const verifiedValue = encodeURIComponent(value);
+      const response = await axios.post(`${baseUrl}/verifyPoc?verifyValue=${verifiedValue}`)
+      //console.log(response.data.data.length)
+      if (response.data.data.length > 0) {
+        const poc = response.data.data[0];
+        //console.log("pOC", poc);
+       setPocName([{ id: poc.record_id, value: poc.Name}]); // Adjust column ID for POC name
+        setPocEmailStatus('');
+      } else {
+        setPocName([]);
+        setPocEmailStatus('Please verify POC email ID');
+      }
+    } catch (err) {
+      console.log(err);
+      setPocName([]);
+      setPocEmailStatus('Error verifying POC email ID');
+    } finally{
+      setLoaderforPoc(false);
+    }
+  };
+  
 const handleSubmit = async (e) => {
     e.preventDefault();
     if (loading) { // Prevent form submission while file is uploading
@@ -146,7 +177,7 @@ const handleSubmit = async (e) => {
     };
 
     try {
-      const response = await axios.post(
+     await axios.post(
         'https://backendforpnf.vercel.app/createvendorinvoice',
         payload,
         {
@@ -155,7 +186,7 @@ const handleSubmit = async (e) => {
           },
         }
       );
-      console.log('Server response:', response.data);
+      //console.log('Server response:', response.data);
       setSubmissionStatus('success');
     } catch (error) {
       console.error('Error submitting form:', error);
@@ -175,9 +206,9 @@ const handleSubmit = async (e) => {
     setVendorName('');
     setInvoiceDate('');
     setInvoiceValue('');
-    setInvoiceCopy(null);
     setPurchaseOrderNumber('');
     setOndcContactPoc('');
+    setOndcContactEmail('');
     if (fileInputRef.current) {
         fileInputRef.current.value = '';
       }
@@ -277,6 +308,22 @@ const handleSubmit = async (e) => {
                   onChange={handleChange}
                 />
               </div>
+              <div className="form-group">
+                <label htmlFor="ondcContactEmail">ONDC Contact Email</label>
+                <input
+                  type="email"
+                  id="ondcContactEmail"
+                  name="ondcContactEmail"
+                  value={ondcContactEmail}
+                  onChange={(e) => {
+                    handleChange(e);
+                  }}
+                  onBlur={(e)=>{
+                    handlePocEmailChange(e)
+                }}
+                />
+                {pocEmailStatus && <div style={{ color: 'red', marginTop:'5px' }}>{pocEmailStatus}</div>}
+              </div>
               <div className="form-group half-width">
                 <label htmlFor="ondcContactPoc">ONDC Contact POC</label>
                 <select
@@ -285,13 +332,16 @@ const handleSubmit = async (e) => {
                   value={ondcContactPoc}
                   onChange={handleChange}
                 >
-                  <option value="">Select Contact POC</option>
-                  {pocName?.length > 0 ? 
+                  <option value="" disabled>Select Contact POC</option>
+                  { loaderforPoc ? (<option disabled>Getting POC name...</option>)
+                  : 
+
+                  (pocName?.length > 0 ? 
                   (pocName?.map((poc, index) => (
                     <option key={index} value={JSON.stringify(poc)}>{poc.value}</option>
                   ))): (
                     <option value="">No POC avaliable</option>
-                  )}
+                  ))}
                 </select>
               </div>
             </div>
