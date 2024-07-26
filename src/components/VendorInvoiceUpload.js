@@ -120,17 +120,14 @@ const VendorInvoiceUpload = () => {
   };
   const handlePocEmailChange = async (e) => {
     const { value } = e.target;
-    //console.log("email", value)
     setOndcContactEmail(value);
     
     try {
       setLoaderforPoc(true);
       const verifiedValue = encodeURIComponent(value);
       const response = await axios.post(`${baseUrl}/verifyPoc?verifyValue=${verifiedValue}`)
-      //console.log(response.data.data.length)
       if (response.data.data.length > 0) {
         const poc = response.data.data[0];
-       // console.log("pOC", poc);
        setPocName([{ id: poc.record_id, value: poc.Name}]); // Adjust column ID for POC name
         setPocEmailStatus('');
       } else {
@@ -148,10 +145,14 @@ const VendorInvoiceUpload = () => {
   
 const handleSubmit = async (e) => {
     e.preventDefault();
-    if (loading) { // Prevent form submission while file is uploading
-        alert("Please wait until the file upload is complete.");
-        return;
-      }
+    if (!vendorPanNumber || !vendorName || !invoiceDate || !invoiceValue || !purchaseOrderNumber || !ondcContactPoc) {
+      alert("Please fill in all required fields.");
+      return;
+  }
+  else if(files.length === 0){
+    alert('please upload the invoice copy')
+  }
+  else{
     setLoaderSubmit(true)
     let ondcContactPOCInfo = { id: '', value: '' };
   
@@ -198,6 +199,7 @@ const handleSubmit = async (e) => {
       setLoaderSubmit(false)
       handleReset()
     }
+  }
   };
 
   const handleReset = () => {
@@ -230,7 +232,10 @@ const handleSubmit = async (e) => {
           <form onSubmit={handleSubmit} onReset={handleReset} encType="multipart/form-data">
             <div className="grid-container">
               <div className="form-group">
-                <label htmlFor="vendorPanNumber">Vendor Pan Number</label>
+                <div style={{ display: 'flex', alignItems: 'center' }}>
+                  <label htmlFor="vendorPanNumber">Vendor Pan Number</label>
+                  <p style={{ color: 'red', margin: '0 0 0 5px', position: 'relative', top: '-3px' }}>*</p>
+                </div>
                 <input
                   type="text"
                   id="vendorPanNumber"
@@ -246,7 +251,10 @@ const handleSubmit = async (e) => {
                 />
               </div>
               <div className="form-group half-width">
+              <div style={{ display: 'flex', alignItems: 'center' }}>
                 <label htmlFor="vendorName">Vendor Name</label>
+                <p style={{ color: 'red', margin: '0 0 0 5px', position: 'relative', top: '-3px' }}>*</p>
+              </div>  
                 <select
                   id="vendorName"
                   name="vendorName"
@@ -265,7 +273,10 @@ const handleSubmit = async (e) => {
                 </select>
               </div>
               <div className="form-group">
+              <div style={{ display: 'flex', alignItems: 'center' }}>
                 <label htmlFor="invoiceDate">Invoice Date</label>
+                <p style={{ color: 'red', margin: '0 0 0 5px', position: 'relative', top: '-3px' }}>*</p>
+              </div>  
                 <input
                   type="date"
                   id="invoiceDate"
@@ -275,7 +286,10 @@ const handleSubmit = async (e) => {
                 />
               </div>
               <div className="form-group">
+              <div style={{ display: 'flex', alignItems: 'center' }}>
                 <label htmlFor="invoiceValue">Invoice Value</label>
+                <p style={{ color: 'red', margin: '0 0 0 5px', position: 'relative', top: '-3px' }}>*</p>
+              </div>  
                 <input
                   type="number"
                   id="invoiceValue"
@@ -285,8 +299,10 @@ const handleSubmit = async (e) => {
                 />
               </div>
               <div className="form-group">
+              <div style={{ display: 'flex', alignItems: 'center' }}>
                 <label htmlFor="invoiceCopy">Upload Invoice Copy</label>
-                
+                <p style={{ color: 'red', margin: '0 0 0 5px', position: 'relative', top: '-3px' }}>*</p>
+              </div>  
                 <input
                   type="file"
                   id="invoiceCopy"
@@ -299,7 +315,10 @@ const handleSubmit = async (e) => {
                 {loading && <div style={{color:'green'}}>Uploading...</div>}
               </div>
               <div className="form-group">
+              <div style={{ display: 'flex', alignItems: 'center' }}>
                 <label htmlFor="purchaseOrderNumber">Purchase Order Number</label>
+                <p style={{ color: 'red', margin: '0 0 0 5px', position: 'relative', top: '-3px' }}>*</p>
+              </div>  
                 <input
                   type="text"
                   id="purchaseOrderNumber"
@@ -325,7 +344,10 @@ const handleSubmit = async (e) => {
                 {pocEmailStatus && <div style={{ color: 'red', marginTop:'5px' }}>{pocEmailStatus}</div>}
               </div>
               <div className="form-group half-width">
+              <div style={{ display: 'flex', alignItems: 'center' }}>
                 <label htmlFor="ondcContactPoc">ONDC Contact POC</label>
+                <p style={{ color: 'red', margin: '0 0 0 5px', position: 'relative', top: '-3px' }}>*</p>
+              </div>  
                 <select
                   id="ondcContactPoc"
                   name="ondcContactPoc"
