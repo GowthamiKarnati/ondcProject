@@ -1,11 +1,15 @@
 import React, { useState,useRef } from 'react';
 import '../VendorRegistration.css'
 import axios from 'axios';
-const baseUrl = 'https://backendforpnf.vercel.app'
+import InputFeild from './InputFeild';
+import Navbar from './Navbar';
+import TypeOfEntity from './TypeofEntity';
+const baseUrl = process.env.REACT_APP_BASE_URL;
+
+
 const VendorRegistrationForm = () => {
     const fileInputRef = useRef(null);
     const [legalEntityName, setLegalEntityName] = useState('');
-    //console.log(legalEntityName);
     const [contactPersonName, setContactPersonName] = useState('');
     const [designation, setDesignation] = useState('');
     const [contactNumber, setContactNumber] = useState('');
@@ -32,8 +36,18 @@ const VendorRegistrationForm = () => {
     const [notinterested, setNotinterested] = useState(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [submissionStatus, setSubmissionStatus] = useState(null);
+    const [tradeName, setTradeName] = useState('');
+    const [cinNo, setCinNo] = useState("");
+    const [uploadCoi, setUploadCoi] = useState(false);
+    const [CoiFile, setCoiFiles] = useState([]);
+    const [msmeNumber, setMsmeNumber] = useState("");
+    const [panCard, setPanCard] = useState([]);
+    const [panCardUpload, setPanCardUpload] = useState(false);
+
+
+    console.log(uploadCoi, CoiFile)
     const handleInputChange = (setter) => (event) => {
-        setter(event.target.value);   
+        setter(event.target.value);  
     };
     const handleMsmeChange = (event) => {
         setIsMsme(event.target.value === 'yes');
@@ -52,6 +66,7 @@ const VendorRegistrationForm = () => {
       };
     
       const handleFileChange = async (e, fileType) => {
+        console.log(fileType)
         const file = e.target.files[0];
         if (file) {
           try {
@@ -64,16 +79,19 @@ const VendorRegistrationForm = () => {
       };
     
       const uploadBase64ToBackend = async (base64Data, mimeType, fileType) => {
+        console.log("entered")
         try {
             switch(fileType){
                 case 'udyam':setUploading(true); break;
                 case 'gst': setGstUploading(true); break;
                 case 'cheque': setChequeUploading(true); break; 
+                case 'coi': setUploadCoi(true); break;
+                case 'pan': setPanCardUpload(true); break;
                 default:
                 break;
             }
           const response = await axios.post(
-            `${baseUrl}/vendorfileUpload`,
+            `${baseUrl}/api/vendor/file-upload`,
             { base64Data, mimeType },
             {
               headers: {
@@ -82,7 +100,7 @@ const VendorRegistrationForm = () => {
             }
           );
           const { msg: { files } } = response.data;
-          //console.log(response.data);
+          console.log("hgfyfhfy", response.data);
           switch (fileType) {
             case 'udyam':
                 setUdyamFiles(files);
@@ -92,6 +110,12 @@ const VendorRegistrationForm = () => {
                 break;
             case 'cheque':
                 setCancelledFiles(files);
+                break;
+            case 'coi':
+                setCoiFiles(files);
+                break;
+            case 'pan':
+                setPanCard(files);
                 break;
             default:
                 break;
@@ -103,6 +127,8 @@ const VendorRegistrationForm = () => {
                 case 'udyam':setUploading(false); break;
                 case 'gst': setGstUploading(false); break;
                 case 'cheque': setChequeUploading(false); break;
+                case 'coi': setUploadCoi(false); break;
+                case 'pan': setPanCardUpload(false); break;
                 default:
                     break; 
             }
@@ -110,21 +136,35 @@ const VendorRegistrationForm = () => {
       };
     const handleSubmit = async(e) =>{
         e.preventDefault();
-        if (!legalEntityName || !contactPersonName || !designation || !contactNumber || !emailId || !address || !state || !pinCode || !panCardNumber || !typeOfEntity || !bankName || !beneficiaryName || !accountNumber || !ifscCode || (isGst && !gstNumber)) {
+        if (!legalEntityName || !contactPersonName || !designation || !contactNumber || !emailId || !address || !state || !pinCode || !panCardNumber || !typeOfEntity || !bankName || !beneficiaryName || !accountNumber || !ifscCode) {
             alert("Please fill all required fields.");
+        } else if (["Private Limited", "Public Limited", "Section 8"].includes(typeOfEntity)) {
+            if (!cinNo) {
+              alert("Please provide the CIN No.");
+              return;
+            }
+            if (!CoiFile) {
+              alert("Please upload the Certificate of Incorporation (COI).");
+              return;
+            }
         } else if (isMsme === null) {
             alert('Please select whether you are registered under the MSME Act.');
         } else if (isGst === null) {
             alert('Please select whether you are registered GST.');
-        } else if (isMsme && udyamFiles.length === 0) {
+        } else if (isMsme && (!msmeNumber || udyamFiles.length === 0)) {
+            if (!msmeNumber) {
+                alert("Please enter your MSME Registration Number.");
+                return;
+            }
             alert('Please upload the required MSME certificate.');
-        } else if (isGst && gstFiles.length === 0) {
+        } else if (isGst && (!gstNumber || gstFiles.length === 0)) {
+            if(!gstNumber){
+                alert('Please enter your GST Registration Number ')
+            }
             alert('Please upload the required GST certificate.');
-        } else if (cancelledFiles.length === 0) {
-            alert('Please upload the cancelled cheque.');
-        } else if (!interested && !notinterested) {
-            alert('Please select an option for the Business Partner Code of Conduct.');
-        } 
+        } else if (cancelledFiles.length === 0 || panCard.length === 0) {
+            alert('Please upload the file.');
+        }
         else {
             setIsSubmitting(true);
             const data = {
@@ -148,11 +188,16 @@ const VendorRegistrationForm = () => {
                 accountNumber,
                 ifscCode,
                 cancelledFiles,
-                interested,
-                notinterested
+                // interested,
+                // notinterested, 
+                tradeName,
+                cinNo,
+                CoiFile,
+                msmeNumber,
+                panCard
             };
             try {
-                await axios.post(`${baseUrl}/createvendor`, data, {
+                await axios.post(`${baseUrl}/api/vendor/create`, data, {
                     headers: {
                         'Content-Type': 'application/json',
                     },
@@ -192,6 +237,11 @@ const VendorRegistrationForm = () => {
                 setCancelledFiles([]);
                 setInterested(null);
                 setNotinterested(null);
+                setTradeName('');
+                setCinNo('');
+                setCoiFiles([]);
+                setMsmeNumber('');
+                setPanCard([]);
                 if (fileInputRef.current) {
                     fileInputRef.current.value = '';
                 }
@@ -200,183 +250,126 @@ const VendorRegistrationForm = () => {
     }
     return (
         <div className="main-container">
-            <nav className="navbar">
-                <div className="container">
-                <span className="title">Vendor Portal</span>
-                <a href="https://ondc.org/assets/theme/images/ondc_registered_logo.svg?v=bfe185127c" target="_blank" rel="noopener noreferrer" className="logo">
-                    <img src="https://ondc.org/assets/theme/images/ondc_registered_logo.svg?v=bfe185127c" alt="ONDC Logo" />
-                </a>
-                </div>
-            </nav>
+            <Navbar />
         <div className="form-container">
             <h2 className="form-title">Vendor Registration Form</h2>
             <form id="business-partner-form" onSubmit={handleSubmit} encType="multipart/form-data">
                 <div className="form-row">
                     <div className="input-group">
-                        <div className="form-group">
-                        <div style={{ display: 'flex', alignItems: 'center' }}>
-                            <label htmlFor="legal-entity-name" className="form-label" style={{ fontWeight: '700' }}>
-                                Legal Entity Name
-                            </label>
-                            <p style={{ color: 'red', margin: '0 0 0 5px', position: 'relative', top: '-3px' }}>*</p>
-                        </div>
-                            <input
-                                type="text"
-                                id="legal-entity-name"
-                                name="legal-entity-name"
-                                className="form-input"
-                                placeholder="Cheque will be issued in this name"
-                                value={legalEntityName}
-                                onChange={
-                                    handleInputChange(setLegalEntityName)}
-                            />
-                        </div>
-                        <div className="form-group">
-                        <div style={{ display: 'flex', alignItems: 'center' }}>
-                            <label htmlFor="contact-person-name" className="form-label">Contact Person Name</label>
-                            <p style={{ color: 'red', margin: '0 0 0 5px', position: 'relative', top: '-3px' }}>*</p>
-                        </div>
-                            <input
-                                type="text"
-                                id="contact-person-name"
-                                name="contact-person-name"
-                                className="form-input"
-                                value={contactPersonName}
-                                onChange={handleInputChange(setContactPersonName)}
-                            />
-                        </div>
+                        <InputFeild 
+                            label="Legal Entity Name"
+                            isRequired={true}
+                            id="legal-entity-name"
+                            name="legal-entity-name"
+                            placeholder="Cheque will be issued in this name"
+                            value={legalEntityName}
+                            onChange={handleInputChange(setLegalEntityName)}        
+                        />
+                        <InputFeild
+                            label="Trade Name"
+                            isRequired={true}
+                            id="tarde-name"
+                            name="trade-name"
+                            value={tradeName}
+                            onChange={handleInputChange(setTradeName)}
+                        />
+                        
                     </div>
                     <div className="input-group">
-                        <div className="form-group">
-                        <div style={{ display: 'flex', alignItems: 'center' }}>
-                            <label htmlFor="designation" className="form-label">Designation</label>
-                            <p style={{ color: 'red', margin: '0 0 0 5px', position: 'relative', top: '-3px' }}>*</p>
-                        </div>
-                            <input
-                                type="text"
-                                id="designation"
-                                name="designation"
-                                className="form-input"
-                                value={designation}
-                                onChange={handleInputChange(setDesignation)}
-                            />
-                        </div>
-                        <div className="form-group">
-                        <div style={{ display: 'flex', alignItems: 'center' }}>
-                            <label htmlFor="contact-number" className="form-label">Contact Number</label>
-                            <p style={{ color: 'red', margin: '0 0 0 5px', position: 'relative', top: '-3px' }}>*</p>
-                        </div>
-                            <input
-                                type="text"
-                                id="contact-number"
-                                name="contact-number"
-                                className="form-input"
-                                value={contactNumber}
-                                onChange={handleInputChange(setContactNumber)}
-                            />
-                        </div>
+                        <InputFeild
+                            label="Contact Person Name"
+                            isRequired={true}
+                            id="contact-person-name"
+                            name="contact-person-name"
+                            value={contactPersonName}
+                            onChange={handleInputChange(setContactPersonName)}
+                        />
+                        <InputFeild
+                            label="Designation"
+                            isRequired={true}
+                            id="designation"
+                            name="designation"
+                            value={designation}
+                            onChange={handleInputChange(setDesignation)}
+                        />   
                     </div>
                     <div className="input-group">
-                        <div className="form-group">
-                        <div style={{ display: 'flex', alignItems: 'center' }}>
-                            <label htmlFor="email-id" className="form-label">Email ID</label>
-                            <p style={{ color: 'red', margin: '0 0 0 5px', position: 'relative', top: '-3px' }}>*</p>
-                            </div>
-                            <input
-                                type="email"
-                                id="email-id"
-                                name="email-id"
-                                className="form-input"
-                                value={emailId}
-                                onChange={handleInputChange(setEmailId)}
-                            />
-                        </div>
-                        <div className="form-group">
-                        <div style={{ display: 'flex', alignItems: 'center' }}>
-                            <label htmlFor="address" className="form-label">Address</label>
-                            <p style={{ color: 'red', margin: '0 0 0 5px', position: 'relative', top: '-3px' }}>*</p>
-                        </div>
-                            <input
-                                type="text"
-                                id="address"
-                                name="address"
-                                className="form-input"
-                                value={address}
-                                onChange={handleInputChange(setAddress)}
-                            />
-                        </div>
+                        <InputFeild
+                            label="Contact Number"
+                            isRequired={true}
+                            id="contact-number"
+                            name="contact-number"
+                            value={contactNumber}
+                            onChange={handleInputChange(setContactNumber)}
+                        />
+                        <InputFeild
+                            label="Email ID"
+                            isRequired={true}
+                            id="email-id"
+                            name="email-id"
+                            type="email"
+                            value={emailId}
+                            onChange={handleInputChange(setEmailId)}
+                        />
                     </div>
                     <div className="input-group">
-                        <div className="form-group">
-                        <div style={{ display: 'flex', alignItems: 'center' }}>
-                            <label htmlFor="state" className="form-label">State</label>
-                            <p style={{ color: 'red', margin: '0 0 0 5px', position: 'relative', top: '-3px' }}>*</p>
-                        </div>
-                            <input
-                                type="text"
-                                id="state"
-                                name="state"
-                                className="form-input"
-                                value={state}
-                                onChange={handleInputChange(setState)}
-                            />
-                        </div>
-                        <div className="form-group">
-                        <div style={{ display: 'flex', alignItems: 'center' }}>
-                            <label htmlFor="pin-code" className="form-label">Pin Code</label>
-                            <p style={{ color: 'red', margin: '0 0 0 5px', position: 'relative', top: '-3px' }}>*</p>
-                        </div>
-                            <input
-                                type="text"
-                                id="pin-code"
-                                name="pin-code"
-                                className="form-input"
-                                value={pinCode}
-                                onChange={handleInputChange(setPinCode)}
-                            />
-                        </div>
+                        <InputFeild
+                            label="Address"
+                            isRequired={true}
+                            id="address"
+                            name="address"
+                            value={address}
+                            onChange={handleInputChange(setAddress)}
+                        />
+                        <InputFeild
+                            label="State"
+                            isRequired={true}
+                            id="state"
+                            name="state"
+                            value={state}
+                            onChange={handleInputChange(setState)}
+                        />
                     </div>
                     <div className="input-group">
-                        <div className="form-group">
-                        <div style={{ display: 'flex', alignItems: 'center' }}>
-                            <label htmlFor="pan-card-number" className="form-label">PAN Card Number</label>
-                            <p style={{ color: 'red', margin: '0 0 0 5px', position: 'relative', top: '-3px' }}>*</p>
-                        </div>
-                            <input
-                                type="text"
-                                id="pan-card-number"
-                                name="pan-card-number"
-                                className="form-input"
-                                value={panCardNumber}
-                                onChange={handleInputChange(setPanCardNumber)}
-                            />
-                        </div>
-                        <div className="form-group">
-                        <div style={{ display: 'flex', alignItems: 'center' }}>
-                            <label htmlFor="type-of-entity" className="form-label">Type of Entity</label>
-                            <p style={{ color: 'red', margin: '0 0 0 5px', position: 'relative', top: '-3px' }}>*</p>
-                        </div>
-                            <select
-                                id="type-of-entity"
-                                name="type-of-entity"
-                                className="form-input"
-                                value={typeOfEntity}
-                                onChange={handleInputChange(setTypeOfEntity)}
-                            >
-                                <option value="" disabled>Select Entity Type</option>
-                                <option value="Private Limited">Private Limited</option>
-                                <option value="Public Limited">Public Limited</option>
-                                <option value="LLP">LLP</option>
-                                <option value="Sole Proprietorship">Sole Proprietorship</option>
-                                <option value="Partnership">Partnership</option>
-                                <option value="HUF">HUF</option>
-                                <option value="Section 8">Section 8</option>
-                                <option value="Societies">Societies</option>
-                                <option value="Trust">Trust</option>
-                                <option value="Self Help Group">Self Help Group</option>
-                            </select>
-                        </div>
+                        <InputFeild
+                            label="PAN Card Number"
+                            isRequired={true}
+                            id="pan-card-number"
+                            name="pan-card-number"
+                            value={panCardNumber}
+                            onChange={handleInputChange(setPanCardNumber)}
+                        />
+                        <InputFeild
+                            label="Pin Code"
+                            isRequired={true}
+                            id="pin-code"
+                            name="pin-code"
+                            value={pinCode}
+                            onChange={handleInputChange(setPinCode)}
+                        />
                     </div>
+                    <div className='form-group'>
+                    <div style={{ display: 'flex', alignItems: 'center', marginTop: '10px' }}>
+                        <label htmlFor="pan-card-upload" className="form-label">Upload PAN Card</label>
+                        <p style={{ color: 'red', margin: '0 0 0 5px', position: 'relative', top: '-3px' }}>*</p>
+                    </div>
+                    <input
+                        type="file"
+                        id="pan-card-upload"
+                        name="pan-card-upload"
+                        className="form-file-input"
+                        onChange={(e) => handleFileChange(e, 'pan')}
+                    />
+                    </div>
+                    {panCardUpload && <div style={{color:'green', marginBottom:'0px'}}>Uploading...</div>}
+                    <TypeOfEntity
+                        typeOfEntity={typeOfEntity}
+                        setTypeOfEntity={setTypeOfEntity}
+                        cinNo={cinNo}
+                        setCinNo={setCinNo}
+                        handleFileChange={handleFileChange}
+                        uploadCoi={uploadCoi}
+                    />
                     <div className="form-group">
                     <div className="form-question">
                         <div className="form-question-label">
@@ -385,25 +378,25 @@ const VendorRegistrationForm = () => {
                         <div className="form-radio-group">
                             <div className="form-radio-option">
                                 <input 
-                                id="msme-yes" 
-                                name="msme" 
-                                type="radio" 
-                                value="yes" 
-                                onChange={handleMsmeChange} 
-                                className="form-radio-input" 
-                                checked={isMsme === true}
+                                    id="msme-yes" 
+                                    name="msme" 
+                                    type="radio" 
+                                    value="yes" 
+                                    onChange={handleMsmeChange} 
+                                    className="form-radio-input" 
+                                    checked={isMsme === true}
                                 />
                                 <label htmlFor="msme-yes" className="form-radio-label">Yes</label>
                             </div>
                             <div className="form-radio-option">
                                 <input 
-                                id="msme-no" 
-                                name="msme" 
-                                type="radio" 
-                                value="no" 
-                                onChange={handleMsmeChange} 
-                                className="form-radio-input" 
-                                checked={isMsme === false}
+                                    id="msme-no" 
+                                    name="msme" 
+                                    type="radio" 
+                                    value="no" 
+                                    onChange={handleMsmeChange} 
+                                    className="form-radio-input" 
+                                    checked={isMsme === false}
                                 />
                                 <label htmlFor="msme-no" className="form-radio-label">No</label>
                             </div>
@@ -411,23 +404,39 @@ const VendorRegistrationForm = () => {
                     </div>
                 </div>
                     {isMsme && (
-                        <div className="form-group" id="udyam-upload-section">
-                            <div style={{ display: 'flex', alignItems: 'center' }}>
-                            <label htmlFor="udyam-certificate" className="form-label">Upload UDYAM Certificate</label>
-                            <p style={{ color: 'red', margin: '0 0 0 5px', position: 'relative', top: '-3px' }}>*</p>
+                        <div className="input-group">
+                            <div className="form-group">
+                                <div style={{ display: 'flex', alignItems: 'center' }}>
+                                    <label htmlFor="udyam-certificate" className="form-label">MSME Registration Number</label>
+                                    <p style={{ color: 'red', margin: '0 0 0 5px', position: 'relative', top: '-3px' }}>*</p>
+                                </div>
+                                <input 
+                                    id="msme-number" 
+                                    type="text" 
+                                    value={msmeNumber || ''} 
+                                    onChange={(e) => setMsmeNumber(e.target.value)} 
+                                    className="form-input"
+                                />
+                            </div>
+                            <div className="form-group">
+                                <div style={{ display: 'flex', alignItems: 'center' }}>
+                                    <label htmlFor="udyam-certificate" className="form-label">Upload UDYAM Certificate</label>
+                                    <p style={{ color: 'red', margin: '0 0 0 5px', position: 'relative', top: '-3px' }}>*</p>
+                                </div>
+                                <input 
+                                    type="file" 
+                                    id="udyam-certificate" 
+                                    name="udyam-certificate" 
+                                    className="form-file-input" 
+                                    //ref={fileInputRef}
+                                    onChange={(e) => {
+                                        handleFileChange(e, 'udyam');
+                                    }}
+                                />
+                                {uploading && <div style={{color:'green', marginBottom:'10px'}}>Uploading...</div>}
+                            </div>
                         </div>
-                            <input 
-                            type="file" 
-                            id="udyam-certificate" 
-                            name="udyam-certificate" 
-                            className="form-file-input" 
-                            //ref={fileInputRef}
-                            onChange={(e) => {
-                                handleFileChange(e, 'udyam');
-                              }}
-                            />
-                            {uploading && <div style={{color:'green', marginBottom:'10px'}}>Uploading...</div>}
-                        </div>
+
                     )}
                     <div className="form-group">
                     <div className="form-question">
@@ -463,178 +472,112 @@ const VendorRegistrationForm = () => {
                         </div>
                     </div>
                     {isGst && (
-                        <div className="form-group" id="gst-upload-section">
-                            <div style={{ display: 'flex', alignItems: 'center' }}>
-                            <label htmlFor="gst-certificate" className="form-label">Upload GST Certificate</label>
-                            <p style={{ color: 'red', margin: '0 0 0 5px', position: 'relative', top: '-3px' }}>*</p>
-                        </div>
-                            <input type="file" 
-                            id="gst-certificate" 
-                            name="gst-certificate" 
-                            className="form-file-input" 
-                            //ref={fileInputRef}
-                            onChange={(e) => {
-                                handleFileChange(e, 'gst');
-                              }}
-                            />
-                            {gstuploading && <div style={{color:'green'}}>Uploading...</div>}
-                            <div style={{ display: 'flex', alignItems: 'center' }}>
-                            <label htmlFor="gst-number" className="form-label mt-4">GST Registration Number</label>
-                            <p style={{ color: 'red', margin: '0 0 0 5px', position: 'relative', top: '-3px' }}>*</p>
-                        </div>
-                            <input
-                                type="text"
-                                id="gst-number"
-                                name="gst-number"
-                                className="form-input"
-                                value={gstNumber}
-                                onChange={handleInputChange(setGstNumber)}
-                            />
-                        </div>
+                        <div className='input-group'>
+                            <div className="form-group">
+                                <div style={{ display: 'flex', alignItems: 'center' }}>
+                                    <label htmlFor="gst-number" className="form-label mt-4">GST Registration Number</label>
+                                    <p style={{ color: 'red', margin: '0 0 0 5px', position: 'relative', top: '-3px' }}>*</p>
+                                </div>
+                                <input
+                                    type="text"
+                                    id="gst-number"
+                                    name="gst-number"
+                                    className="form-input"
+                                    value={gstNumber}
+                                    onChange={handleInputChange(setGstNumber)}
+                                />
+                            </div>
+                            <div className="form-group">
+                                <div style={{ display: 'flex', alignItems: 'center' }}>
+                                    <label htmlFor="gst-certificate" className="form-label">Upload GST Certificate</label>
+                                    <p style={{ color: 'red', margin: '0 0 0 5px', position: 'relative', top: '-3px' }}>*</p>
+                                </div>
+                                <input 
+                                    type="file" 
+                                    id="gst-certificate" 
+                                    name="gst-certificate" 
+                                    className="form-file-input" 
+                                    //ref={fileInputRef}
+                                    onChange={(e) => {
+                                        handleFileChange(e, 'gst');
+                                    }}
+                                />
+                                {gstuploading && <div style={{color:'green'}}>Uploading...</div>}
+                            </div>
+                            </div>
                     )}
                     <div className="input-group">
-                    <div className="form-group">
-                     <div style={{ display: 'flex', alignItems: 'center' }}>
-                        <label htmlFor="bank-name" className="form-label">Bank Name</label>
-                        <p style={{ color: 'red', margin: '0 0 0 5px', position: 'relative', top: '-3px' }}>*</p>
-                        </div>
-                        <input
-                                type="text"
-                                id="bank-name"
-                                name="bank-name"
-                                className="form-input"
-                                value={bankName}
-                                onChange={handleInputChange(setBankName)}
-                            />
-                    </div>
-                    
-                    <div className="form-group">
-                    <div style={{ display: 'flex', alignItems: 'center' }}>
-                        <label htmlFor="beneficiary-name" className="form-label">Beneficiary Name</label>
-                        <p style={{ color: 'red', margin: '0 0 0 5px', position: 'relative', top: '-3px' }}>*</p>
-                        </div>
-                        <input
-                                type="text"
-                                id="beneficiary-name"
-                                name="beneficiary-name"
-                                className="form-input"
-                                value={beneficiaryName}
-                                onChange={handleInputChange(setBeneficiaryName)}
-                            />
-                    </div>
+                        <InputFeild
+                            label="Bank Name"
+                            isRequired={true}
+                            id="bank-name"
+                            name="bank-name"
+                            value={bankName}
+                            onChange={handleInputChange(setBankName)}
+                            placeholder="Enter Bank Name"
+                        />
+                        <InputFeild
+                            label="Beneficiary Name"
+                            isRequired={true}
+                            id="beneficiary-name"
+                            name="beneficiary-name"
+                            value={beneficiaryName}
+                            onChange={handleInputChange(setBeneficiaryName)}
+                            placeholder="Enter Beneficiary Name"
+                        />
                     </div>
                     <div className="input-group">
-                    <div className="form-group">
-                    <div style={{ display: 'flex', alignItems: 'center' }}>
-                        <label htmlFor="account-number" className="form-label">Account Number</label>
-                        <p style={{ color: 'red', margin: '0 0 0 5px', position: 'relative', top: '-3px' }}>*</p>
-                        </div>
-                        <input
-                                type="text"
-                                id="account-number"
-                                name="account-number"
-                                className="form-input"
-                                value={accountNumber}
-                                onChange={handleInputChange(setAccountNumber)}
-                                //onFocus={setFormError(false)}
-                            />
-                    </div>
-                    <div className="form-group">
-                    <div style={{ display: 'flex', alignItems: 'center' }}>
-                        <label htmlFor="ifsc-code" className="form-label">IFSC Code</label>
-                        <p style={{ color: 'red', margin: '0 0 0 5px', position: 'relative', top: '-3px' }}>*</p>
-                        </div>
-                        <input
-                                type="text"
-                                id="ifsc-code"
-                                name="ifsc-code"
-                                className="form-input"
-                                value={ifscCode}
-                                onChange={handleInputChange(setIfscCode)}
-                            />
-                    </div>
+                        <InputFeild
+                            label="Account Number"
+                            isRequired={true}
+                            id="account-number"
+                            name="account-number"
+                            value={accountNumber}
+                            onChange={handleInputChange(setAccountNumber)}
+                            placeholder="Enter Account Number"
+                        />
+                        <InputFeild
+                            label="IFSC Code"
+                            isRequired={true}
+                            id="ifsc-code"
+                            name="ifsc-code"
+                            value={ifscCode}
+                            onChange={handleInputChange(setIfscCode)}
+                            placeholder="Enter IFSC Code"
+                        />
                     </div>
                     <div className="form-group">
                     <div style={{ display: 'flex', alignItems: 'center' }}>
                         <label htmlFor="cancelled-cheque" className="form-label">Cancelled Cheque</label>
-                        <p style={{ color: 'red', margin: '0 0 0 5px', position: 'relative', top: '-3px' }}>*</p>
+                            <p style={{ color: 'red', margin: '0 0 0 5px', position: 'relative', top: '-3px' }}>*</p>
                         </div>
                         <input 
-                        type="file" 
-                        id="cancelled-cheque" 
-                        name="cancelled-cheque" 
-                        className="form-file-input" 
-                        ref={fileInputRef}
-                        onChange={(e) => {
-                            handleFileChange(e, 'cheque');
-                          }}
+                            type="file" 
+                            id="cancelled-cheque" 
+                            name="cancelled-cheque" 
+                            className="form-file-input" 
+                            ref={fileInputRef}
+                            onChange={(e) => {
+                                handleFileChange(e, 'cheque');
+                            }}
                         />
                         {chequeuploading && <div style={{color:'green'}}>Uploading...</div>}
-                    </div>
-                    <div className="col-span-1 md:col-span-2">
-                        <div className ="form-question-label">
-                            Business Partner Code of Conduct
-                            </div>
-                            <div className="form-radio-group">
-                                <div className="form-radio-option">
-                                    <input 
-                                        id="bp-code-yes" 
-                                        name="bp-code" 
-                                        type="radio" 
-                                        value="yes" 
-                                        className="code-of-conduct-radio"
-                                        checked ={interested === true}
-                                        onChange={(e)=>{
-                                            setInterested(e.target.value === 'yes')
-                                            setNotinterested(e.target.value === 'no')
-                                        }}
-                                    />
-                                    <label 
-                                        htmlFor="bp-code-yes" 
-                                        style={{color:'black', marginLeft:'15px', fontSize:'15px'}}
-                                    >
-                                        I have read and understood the Business Partner Code of Conduct uploaded on the link above and hereby accept to abide by the same throughout the period of partnership with ONDC
-                                    </label>
-                                </div>
-                                <div className="form-radio-option">
-                                    <input 
-                                        iid="bp-code-yes" 
-                                        name="bp-code" 
-                                        type="radio" 
-                                        value="yes" 
-                                        className="code-of-conduct-radio"
-                                        checked={notinterested === true}
-                                        onChange={(e)=>{
-                                            setNotinterested(e.target.value === 'yes')
-                                            setInterested(e.target.value === 'no')
-                                        }}
-                                    />
-                                    <label 
-                                        htmlFor="bp-code-no" 
-                                        style={{color:'black', marginLeft:'15px',fontSize:'15px'}}
-                                    >
-                                        I have read and understood the Business Partner Code of Conduct uploaded on the link above and have my reservations in complying with the same. Hence, I do not wish to continue with the partnership with ONDC
-                                    </label>
-                                </div>
-                            </div>
-                        
                     </div>
                     <div className="form-group">
                         <button type="submit" className="form-submit-button" disabled={isSubmitting}>
                             {isSubmitting ? "Submitting..." : "Submit"}
-                            </button>
+                        </button>
                     </div>
-                    
                     {submissionStatus === 'success' && <div style={{color:'green', fontSize:'18'}}>
                     Vendor Registration Details Successfully Submitted!
                     <br></br>
                     <br></br>
-                     Thank you for providing your vendor registration details. 
-                     Your information has been successfully captured and recorded in our system. 
-                     We will review the submitted details and get back to you if any additional information is needed. 
-                     Please keep an eye on your email for further communication from our team. 
-                     If you have any immediate questions or concerns, feel free to contact our support team.
-                        </div>}
+                    Thank you for providing your vendor registration details. 
+                    Your information has been successfully captured and recorded in our system. 
+                    We will review the submitted details and get back to you if any additional information is needed. 
+                    Please keep an eye on your email for further communication from our team. 
+                    If you have any immediate questions or concerns, feel free to contact our support team.
+                    </div>}
                     {submissionStatus === 'error' && <div style={{color:'red'}}>Error submitting form. Please try again.</div>}
                 </div>
             </form>

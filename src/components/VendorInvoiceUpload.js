@@ -1,10 +1,10 @@
 import React, { useState,useRef } from 'react';
 import '../App.css';
 import axios from 'axios';
-const baseUrl = 'https://backendforpnf.vercel.app'
-//const baseUrl = 'http://localhost:5002'
+import Navbar from './Navbar';
+const baseUrl = process.env.REACT_APP_BASE_URL;
+
 const VendorInvoiceUpload = () => {
-  // State variables for each form field
   const [vendorPanNumber, setVendorPanNumber] = useState('');
   const [vendorName, setVendorName] = useState('');
   const [invoiceDate, setInvoiceDate] = useState('');
@@ -56,25 +56,18 @@ const VendorInvoiceUpload = () => {
     const { value } = e.target;
     const cleanedValue = value.replace(/\s/g, '');
    //console.log("value", cleanedValue);
-   try{
-    setLoaderforName(true);
-    const encodedValue = encodeURIComponent(cleanedValue);
-    //console.log("Encoded", encodedValue);
-    const response = await axios.get(`${baseUrl}/vendor?cleanedValue=${encodedValue}`);
-    setRecordID(response.data.data[0].record_id)
-    //const dept = response.data.data[0]['Dept'];
-    setVendorNames(response.data.data[0]['Legal Entity Name'])
-    // const encodedDept = encodeURIComponent(dept)
-    // const responseforOndc = await axios.get(`${baseUrl}/vendordept?dept=${encodedDept}`);
-    // //console.log(responseforOndc.data.data);
-    // const ondcNames= responseforOndc.data.data.map(dept=> ({id: dept.record_id, value: dept.Name}))
-    // setPocName(ondcNames);
-   }catch(err){
-      console.log(err);
-   }
-   finally{
-    setLoaderforName(false)
-   }
+    try{
+      setLoaderforName(true);
+      const encodedValue = encodeURIComponent(cleanedValue);
+      const response = await axios.get(`${baseUrl}/api/vendor/vendor-info?cleanedValue=${encodedValue}`);
+      setRecordID(response.data.data[0].record_id)
+      setVendorNames(response.data.data[0]['Legal Entity Name'])
+    }catch(err){
+        console.log(err);
+    }
+    finally{
+      setLoaderforName(false)
+    }
   }
 
   const convertFileToBase64 = (file) => {
@@ -102,7 +95,7 @@ const VendorInvoiceUpload = () => {
     try {
       setLoading(true);
       const response = await axios.post(
-        'https://backendforpnf.vercel.app/vendorfileUpload',
+        `${baseUrl}/api/vendor/file-upload`,
         { base64Data, mimeType },
         {
           headers: {
@@ -121,11 +114,11 @@ const VendorInvoiceUpload = () => {
   const handlePocEmailChange = async (e) => {
     const { value } = e.target;
     setOndcContactEmail(value);
-    
     try {
       setLoaderforPoc(true);
       const verifiedValue = encodeURIComponent(value);
-      const response = await axios.post(`${baseUrl}/verifyPoc?verifyValue=${verifiedValue}`)
+      console.log(verifiedValue)
+      const response = await axios.get(`${baseUrl}/api/vendor/poc-name?verifyValue=${verifiedValue}`)
       if (response.data.data.length > 0) {
         const poc = response.data.data[0];
        setPocName([{ id: poc.record_id, value: poc.Name}]); // Adjust column ID for POC name
@@ -143,28 +136,27 @@ const VendorInvoiceUpload = () => {
     }
   };
   
-const handleSubmit = async (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (!vendorPanNumber || !vendorName || !invoiceDate || !invoiceValue || !purchaseOrderNumber || !ondcContactPoc) {
       alert("Please fill in all required fields.");
       return;
-  }
-  else if(files.length === 0){
-    alert('please upload the invoice copy')
-  }
-  else{
-    setLoaderSubmit(true)
-    let ondcContactPOCInfo = { id: '', value: '' };
-  
-  try {
-    if (ondcContactPoc) {
-      ondcContactPOCInfo = JSON.parse(ondcContactPoc);
     }
-  } catch (error) {
-    console.error('Error parsing ONDC Contact POC:', error);
-    setSubmissionStatus('error');
-    return;
-  }
+    else if(files.length === 0){
+      alert('please upload the invoice copy')
+    }
+    else{
+      setLoaderSubmit(true)
+      let ondcContactPOCInfo = { id: '', value: '' };
+    try {
+      if (ondcContactPoc) {
+        ondcContactPOCInfo = JSON.parse(ondcContactPoc);
+      }
+    } catch (error) {
+      console.error('Error parsing ONDC Contact POC:', error);
+      setSubmissionStatus('error');
+      return;
+    }
     const payload = {
       vendorPanNumber: vendorPanNumber.toUpperCase(),
       vendorName,
@@ -176,16 +168,15 @@ const handleSubmit = async (e) => {
       files,
       record_id:recordId
     };
-
     try {
-     await axios.post(
-        'https://backendforpnf.vercel.app/createvendorinvoice',
-        payload,
-        {
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        }
+    await axios.post(
+      `${baseUrl}/api/vendor/upload-invoice`,
+      payload,
+      {
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      }
       );
       //console.log('Server response:', response.data);
       setSubmissionStatus('success');
@@ -199,7 +190,7 @@ const handleSubmit = async (e) => {
       setLoaderSubmit(false)
       handleReset()
     }
-  }
+    }
   };
 
   const handleReset = () => {
@@ -218,14 +209,7 @@ const handleSubmit = async (e) => {
 
   return (
     <div className="main-container">
-      <nav className="navbar">
-        <div className="container">
-          <span className="title">Vendor Portal</span>
-          <a href="https://ondc.org/assets/theme/images/ondc_registered_logo.svg?v=bfe185127c" target="_blank" rel="noopener noreferrer" className="logo">
-            <img src="https://ondc.org/assets/theme/images/ondc_registered_logo.svg?v=bfe185127c" alt="ONDC Logo" />
-          </a>
-        </div>
-      </nav>
+      <Navbar />
       <div className="main-content">
         <div className="form-container">
           <h2 className="form-title">Vendor Invoice Upload</h2>
@@ -243,7 +227,6 @@ const handleSubmit = async (e) => {
                   value={vendorPanNumber}
                   onChange={(e) => {
                     handleChange(e);
-                    //handlefilter(e);
                 }}
                 onBlur={(e)=>{
                     handlefilter(e)

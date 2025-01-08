@@ -4,6 +4,7 @@ import VendorInvoiceUpload from './components/VendorInvoiceUpload';
 import VendorRegistration from './components/VendorRegistration';
 
 function App() {
+  console.log(process.env.REACT_APP_BASE_URL)
   return (
     <Router>
       <Routes>
