@@ -152,7 +152,8 @@ const VendorInvoiceUpload = () => {
       console.log("Number", invoiceNumber)
       setFetching(true);
       const encodedValue = encodeURIComponent(invoiceNumber);
-      if(invoiceNumber){
+      console.log(encodedValue)
+      if(invoiceNumber.trim()){
       const response = await axios.get(`${baseUrl}/api/vendor/get-invoice-data?number=${encodedValue}`);
       if (response.data && Array.isArray(response.data.data) && response.data.data.length > 0) {
         const invoiceData = response.data.data[0]; 
