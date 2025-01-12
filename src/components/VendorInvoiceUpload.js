@@ -70,6 +70,7 @@ const VendorInvoiceUpload = () => {
       setLoaderforName(true);
       const encodedValue = encodeURIComponent(cleanedValue);
       const response = await axios.get(`${baseUrl}/api/vendor/vendor-info?cleanedValue=${encodedValue}`);
+      console.log(`${baseUrl}/api/vendor/vendor-info?cleanedValue=${encodedValue}`)
       setRecordID(response.data.data[0].record_id)
       setVendorName(response.data.data[0]['Legal Entity Name'])
     }catch(err){
