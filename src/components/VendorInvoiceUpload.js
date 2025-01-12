@@ -399,13 +399,13 @@ const VendorInvoiceUpload = () => {
                     handleFileChange(e);
                   }}
                 />
+                {loading && <div style={{color:'green'}}>Uploading...</div>}
                 {filePath && (
                   <div style={{ marginTop: 10, color: 'green' }}>
                     <p style={{ marginBottom: '5px' }}><strong>Current file:</strong></p>
                     <p style={{ wordWrap: 'break-word' }}>{filePath}</p>
                   </div>
                 )}
-                {loading && <div style={{color:'green'}}>Uploading...</div>}
               </div>
               <div className="form-group">
               <div style={{ display: 'flex', alignItems: 'center' }}>
