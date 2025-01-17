@@ -9,6 +9,7 @@ const VendorInvoiceUpload = () => {
   const [uploadType, setUploadType] = useState('new-upload'); 
   const [vendorPanNumber, setVendorPanNumber] = useState('');
   const [vendorName, setVendorName] = useState('');
+  const [vendorMap, setVendorMap] = useState([]);
   const [invoiceDate, setInvoiceDate] = useState('');
   const [invoiceValue, setInvoiceValue] = useState('');
   const [purchaseOrderNumber, setPurchaseOrderNumber] = useState('');
@@ -28,14 +29,17 @@ const VendorInvoiceUpload = () => {
   const [invoiceNumber, setInvoiceNumber] = useState('');
   const [filePath, setFilePath] = useState('');
   const [updateRecordId, setUpdateRecordId] = useState('')
-  const [pocRecordId, setPocRecordId] = useState('')
-  console.log('pocName', pocName)
+  const [pocRecordId, setPocRecordId] = useState('');
+  const [pocMap, setPocMap] = useState([]);
+  const [verifyInvoice, setVerifyInvoice] = useState('');
+  const [verifyPan, setVerifyPan] = useState('');
+  const [verifyName, setVerifyName] = useState('');
   const handleChange = (e) => {
     const { name, value } = e.target;
     switch (name) {
       case 'vendorPanNumber':
         setVendorPanNumber(value);
-
+        setVendorName('');
         break;
       case 'vendorName':
         setVendorName(value);
@@ -50,10 +54,11 @@ const VendorInvoiceUpload = () => {
         setPurchaseOrderNumber(value);
         break;
       case 'ondcContactPoc':
-        setOndcContactPoc(value);
+        pocName(value);
         break;
       case 'ondcContactEmail':
         setOndcContactEmail(value);
+        setPocName('')
         break;
       case 'invoiceNumber':
         setInvoiceNumber(value);
@@ -63,22 +68,25 @@ const VendorInvoiceUpload = () => {
     }
   };
   const handlefilter = async(e) =>{
-    console.log("called")
     const { value } = e.target;
+    if(value){
     const cleanedValue = value.replace(/\s/g, '');
     try{
       setLoaderforName(true);
       const encodedValue = encodeURIComponent(cleanedValue);
       const response = await axios.get(`${baseUrl}/api/vendor/vendor-info?cleanedValue=${encodedValue}`);
-      console.log(`${baseUrl}/api/vendor/vendor-info?cleanedValue=${encodedValue}`)
-      setRecordID(response.data.data[0].record_id)
-      setVendorName(response.data.data[0]['Legal Entity Name'])
+      const vendorData = response.data.data.map((vendor) => ({
+        id: vendor.record_id,
+        name: vendor['Legal Entity Name'],
+      }));
+      setVendorMap(vendorData);
     }catch(err){
         console.log(err);
     }
     finally{
       setLoaderforName(false)
     }
+  }
   }
 
   const convertFileToBase64 = (file) => {
@@ -132,17 +140,19 @@ const VendorInvoiceUpload = () => {
       console.log(verifiedValue)
       const response = await axios.get(`${baseUrl}/api/vendor/poc-name?verifyValue=${verifiedValue}`)
       if (response.data.data.length > 0) {
-        const poc = response.data.data[0];
-        setPocRecordId(poc.record_id)
-        setPocName(poc.Name); 
+        const pocData = response.data.data.map((poc) => ({
+          id: poc.record_id,
+          name: poc.Name,
+        }));
+        setPocMap(pocData); 
         setPocEmailStatus('');
       } else {
-        setPocName('');
+        setPocMap([]); 
         setPocEmailStatus('Please verify POC email ID');
       }
     } catch (err) {
       console.log(err);
-      setPocName('');
+      setPocMap([]);
       setPocEmailStatus('Error verifying POC email ID');
     } finally{
       setLoaderforPoc(false);
@@ -150,40 +160,41 @@ const VendorInvoiceUpload = () => {
   };
   const fetchInvoiceData = async () => {
     try {
-      console.log("Number", invoiceNumber)
       setFetching(true);
       const encodedValue = encodeURIComponent(invoiceNumber);
-      console.log(encodedValue)
       if(invoiceNumber.trim()){
       const response = await axios.get(`${baseUrl}/api/vendor/get-invoice-data?number=${encodedValue}`);
       if (response.data && Array.isArray(response.data.data) && response.data.data.length > 0) {
         const invoiceData = response.data.data[0]; 
         setUpdateRecordId(invoiceData['record_id']);
+        setVerifyPan(invoiceData['Vendor PAN'] || '');
+        setVerifyName(invoiceData['Vendor']|| '')
         const invoiceDate = invoiceData["Invoice Date"] ? invoiceData["Invoice Date"].split(" ")[0] : '';
-        setVendorPanNumber(invoiceData["Vendor PAN"] || ''); 
-        setVendorName(invoiceData["Vendor"] || ''); 
         setInvoiceDate(invoiceDate || ''); 
         setPurchaseOrderNumber(invoiceData["PO Number"] || ''); 
-        setOndcContactPoc(invoiceData["ONDC Point of Contact"] || ''); 
+        //setOndcContactPoc(invoiceData["ONDC Point of Contact"] || ''); 
         setInvoiceValue(invoiceData["Invoice Value"] || '');
+        setVerifyInvoice(invoiceData['Invoice Number'] || '')
         const attachments = JSON.parse(invoiceData["Invoice Attachment"] || '[]');
           if (attachments.length > 0) {
             setFiles(attachments);
             setFilePath(attachments[0].path); 
           }
-          if (invoiceData['Vendor PAN']) {
-            handlefilter({ target: { value: invoiceData['Vendor PAN'] } });
-          }
           if(invoiceData['ONDC Point of Contact']){
             try{
               const encodedValue = encodeURIComponent(invoiceData['ONDC Point of Contact'])
-              const response = await axios.get(`${baseUrl}/api/vendor/get-poc-email?name=${encodedValue}`);
-              if (response.data.data.length > 0) {
-                const poc = response.data.data[0];
-                console.log("poc", poc)
+              const pocResponse = await axios.get(`${baseUrl}/api/vendor/get-poc-email?name=${encodedValue}`);
+              console.log('response', response)
+              if (pocResponse.data.data.length > 0) {
+                const poc = pocResponse.data.data[0];
                 setOndcContactEmail(poc.Email)
+                const pocData = pocResponse.data.data.map((poc) => ({
+                  id: poc.record_id,
+                  name: poc.Name,
+                }));
+                setPocMap(pocData); 
+                setPocName(poc.Name);
                 setPocRecordId(poc.record_id)
-                setPocName(poc.Name); 
                 setPocEmailStatus('');
               } else {
                 setPocName('');
@@ -208,19 +219,42 @@ const VendorInvoiceUpload = () => {
   };
   const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log('uploadType', uploadType)
-    if (!vendorPanNumber || !vendorName || !invoiceDate || !invoiceValue || !purchaseOrderNumber || !ondcContactPoc) {
+    if (uploadType === 're-upload' && verifyInvoice !== invoiceNumber) {
+      alert("Invoice number is not valid");
+      return
+    }
+    if (uploadType === 're-upload' && verifyPan !== vendorPanNumber && verifyName !== vendorName) {
+      alert("Please verify the Vendor Pan and Name");
+      return 
+    }    
+    const encodedValue = encodeURIComponent(invoiceNumber);
+    try {
+      const invoiceExists = await axios.get(`${baseUrl}/api/vendor/get-invoice-data?number=${encodedValue}`);
+      
+      if (uploadType === 'new-upload') {
+        if (invoiceExists.data.data.length !== 0) {
+          alert('This invoice number already exists. Please use a different number.');
+          return;
+        }
+      }
+    } catch (error) {
+      alert('An error occurred while checking the invoice number. Please try again.');
+    }    
+    if (!vendorPanNumber || !vendorName || !invoiceDate || !invoiceValue || !purchaseOrderNumber || !pocName) {
       alert("Please fill in all required fields.");
       return;
     }
     else if(files.length === 0){
       alert('please upload the invoice copy')
+      return
     }
     else{
     setLoaderSubmit(true)
     const payload = {
-      vendorPanNumber: vendorPanNumber.toUpperCase(),
-      vendorName,
+      ...(uploadType !== 're-upload' && {
+        vendorPanNumber: vendorPanNumber.toUpperCase(),
+        vendorName,
+      }),
       invoiceDate,
       invoiceValue,
       purchaseOrderNumber,
@@ -231,6 +265,7 @@ const VendorInvoiceUpload = () => {
       record_id:recordId,
       ...(uploadType === 're-upload' ? { updateRecordId: updateRecordId } : {})
     };
+    console.log('payload', payload)
     try {
       const url =
         uploadType === 'new-upload'
@@ -242,8 +277,7 @@ const VendorInvoiceUpload = () => {
           'Content-Type': 'application/json',
         },
       });
-      console.log(res);
-      //console.log('Server response:', response.data);
+      console.log('Server response:', res.data);
       setSubmissionStatus('success');
       setTimeout(()=>{
         setSubmissionStatus(null)
@@ -260,7 +294,23 @@ const VendorInvoiceUpload = () => {
     }
     }
   };
-  
+  const handleVendorNameChange = (e) => {
+    const selectedVendorId = e.target.value; 
+    const selectedVendor = vendorMap.find((vendor) => vendor.id === selectedVendorId);
+    setVendorName(selectedVendor ? selectedVendor.name : ''); 
+    setRecordID(selectedVendorId); 
+  };
+  const handlePocNameChange = (event) => {
+    const selectedPocName = event.target.value;
+    const selectedPoc = pocMap.find((poc) => poc.id === selectedPocName);
+    if (selectedPoc) {
+      setPocName(selectedPoc.name); 
+      setPocRecordId(selectedPoc.id); 
+    } else {
+      setPocName('');
+      setPocRecordId('');
+    }
+  };  
   const handleReset = () => {
     setVendorPanNumber('');
     setVendorName('');
@@ -274,6 +324,10 @@ const VendorInvoiceUpload = () => {
     if (fileInputRef.current) {
         fileInputRef.current.value = '';
       }
+    setVendorMap([]);
+    setPocMap([]);
+    setPocName('');
+    setPocRecordId('');
   };
 
   return (
@@ -293,33 +347,9 @@ const VendorInvoiceUpload = () => {
           </select>
         </div>
           <form onSubmit={handleSubmit} onReset={handleReset} encType="multipart/form-data">
-          {uploadType === 're-upload' && (<p style={{fontSize:15, marginTop: 5}}>Please enter the invoice number to get the details</p>)}
+          {/* {uploadType === 're-upload' && (<p style={{fontSize:15, marginTop: 5}}>Please enter the invoice number to get the details</p>)} */}
             <div className="grid-container">
-            <div className="form-group" style={{marginTop:15}}>
-              <div style={{ display: 'flex', alignItems: 'center' }}>
-                <label htmlFor="invoiceValue">Invoice Number</label>
-                <p style={{ color: 'red', margin: '0 0 0 5px', position: 'relative', top: '-3px' }}>*</p>
-              </div>  
-                <input
-                  type="number"
-                  id="invoiceNumber"
-                  name="invoiceNumber"
-                  value={invoiceNumber}
-                  onChange={handleChange}
-                  //onBlur={uploadType === 're-upload' ? fetchInvoiceData : null} 
-                />
-                {(!fetching && uploadType === 're-upload') && (
-                  <button
-                    type="button"
-                    onClick={fetchInvoiceData}
-                    style={{ marginTop: 10 }}
-                  >
-                    Fetch Details
-                  </button>
-                )}
-                {fetching && (<p>Fetching the Details...</p>)}
-              </div>
-              <div className="form-group" style={{marginTop:15}}>
+              <div className="form-group">
                 <div style={{ display: 'flex', alignItems: 'center' }}>
                   <label htmlFor="vendorPanNumber">Vendor Pan Number</label>
                   <p style={{ color: 'red', margin: '0 0 0 5px', position: 'relative', top: '-3px' }}>*</p>
@@ -346,18 +376,47 @@ const VendorInvoiceUpload = () => {
                   id="vendorName"
                   name="vendorName"
                   value={vendorName}
-                  onChange={handleChange}
+                  onChange={handleVendorNameChange}
                 >
-                  <option value="" disabled >Select Vendor</option>
-                  {loaderforName ? 
-                  (<option disabled>Getting vendor name...</option>)
-                  :
-                  (vendorName ? (
-                    <option  value={vendorName}>{vendorName}</option>
-                  ) : (
-                    <option value=""disabled>No vender names available</option>
-                  ) )}
+                 <option value="" disabled>
+                  {loaderforName ? 'Getting vendor names...' : 'Select Vendor'}
+                </option>
+                {!loaderforName &&
+                  vendorMap.map((vendor) => (
+                    <option key={vendor.id} value={vendor.id}>
+                      {vendor.name}
+                    </option>
+                  ))}
+                {!loaderforName && vendorMap.length === 0 && (
+                  <option value="" disabled>
+                    No vendor names available
+                  </option>
+                )}
                 </select>
+              </div>
+              <div className="form-group">
+              <div style={{ display: 'flex', alignItems: 'center' }}>
+                <label htmlFor="invoiceValue">Invoice Number</label>
+                <p style={{ color: 'red', margin: '0 0 0 5px', position: 'relative', top: '-3px' }}>*</p>
+              </div>  
+                <input
+                  type="number"
+                  id="invoiceNumber"
+                  name="invoiceNumber"
+                  value={invoiceNumber}
+                  onChange={handleChange}
+                  //onBlur={uploadType === 're-upload' ? fetchInvoiceData : null} 
+                />
+                {(!fetching && uploadType === 're-upload') && (
+                  <button
+                    type="button"
+                    onClick={fetchInvoiceData}
+                    style={{ marginTop: 10 }}
+                  >
+                    Fetch Details
+                  </button>
+                )}
+                {fetching && (<p>Fetching the Details...</p>)}
               </div>
               <div className="form-group">
               <div style={{ display: 'flex', alignItems: 'center' }}>
@@ -444,18 +503,24 @@ const VendorInvoiceUpload = () => {
                 <select
                   id="ondcContactPoc"
                   name="ondcContactPoc"
-                  value={ondcContactPoc}
-                  onChange={handleChange}
+                  value={pocName}
+                  onChange={handlePocNameChange}
                 >
-                <option value="" disabled>Select Contact POC</option>
-                { loaderforPoc ? (<option disabled>Getting POC name...</option>)
-                : 
-
-                (pocName ? (
-                  <option value={pocName}>{pocName}</option>
-                ) : (
-                  <option value=""disabled>No vender names available</option>
-                ) )}
+                <option value="" disabled>
+                  {loaderforPoc ? 'Getting POC names...' : 'Select Contact POC'}
+                </option>
+                {!loaderforPoc &&
+                  pocMap.length > 0 &&
+                  pocMap.map((poc) => (
+                    <option key={poc.id} value={poc.id}>
+                      {poc.name}
+                    </option>
+                  ))}
+                {!loaderforPoc && pocMap.length === 0 && (
+                  <option value="" disabled>
+                    No POCs available
+                  </option>
+                )}
                 </select>
               </div>
             </div>

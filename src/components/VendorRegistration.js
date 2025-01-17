@@ -6,7 +6,6 @@ import Navbar from './Navbar';
 import TypeOfEntity from './TypeofEntity';
 const baseUrl = process.env.REACT_APP_BASE_URL;
 
-
 const VendorRegistrationForm = () => {
     const fileInputRef = useRef(null);
     const [legalEntityName, setLegalEntityName] = useState('');
