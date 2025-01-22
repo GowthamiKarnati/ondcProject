@@ -11,7 +11,7 @@ import {
 	uploadBase64ToBackend,
 } from "../utilities/utils";
 import { convertFileToBase64 } from "../utilities/fileUtils";
-import axios from "axios";
+import InputField from "./InputFeild";
 const baseUrl = process.env.REACT_APP_BASE_URL;
 
 const VendorInvoiceUpload = () => {
@@ -270,13 +270,13 @@ const VendorInvoiceUpload = () => {
 	};
 	const fetchPoNumbers = async () => {
 		try {
-			setPoLoader(true); 
+			setPoLoader(true);
 			const poNumbers = await fetchNumbers(vendorName);
 			setPoMap(poNumbers);
 		} catch (e) {
 			console.error("Error fetching PO numbers:", e);
 		} finally {
-			setPoLoader(false); 
+			setPoLoader(false);
 		}
 	};
 	const handlePocNameChange = (event) => {
@@ -340,35 +340,17 @@ const VendorInvoiceUpload = () => {
 						<h2 className="form-title">Vendor Invoice Upload</h2>
 					</div>
 					<form onSubmit={handleSubmit} onReset={handleReset} encType="multipart/form-data">
-						{/* {uploadType === 're-upload' && (<p style={{fontSize:15, marginTop: 5}}>Please enter the invoice number to get the details</p>)} */}
 						<div className="grid-container">
-							<div className="form-group">
-								<div style={{ display: "flex", alignItems: "center" }}>
-									<label htmlFor="vendorPanNumber">Vendor Pan Number</label>
-									<p
-										style={{
-											color: "red",
-											margin: "0 0 0 5px",
-											position: "relative",
-											top: "-3px",
-										}}
-									>
-										*
-									</p>
-								</div>
-								<input
-									type="text"
-									id="vendorPanNumber"
-									name="vendorPanNumber"
-									value={vendorPanNumber}
-									onChange={(e) => {
-										handleChange(e);
-									}}
-									onBlur={(e) => {
-										handleFilter(e);
-									}}
-								/>
-							</div>
+							<InputField
+								label="Vendor Pan Number"
+								isRequired={true}
+								id="vendorPanNumber"
+								name="vendorPanNumber"
+								placeholder="Enter Vendor PAN Number"
+								value={vendorPanNumber}
+								onChange={(e) => handleChange(e)}
+								onBlur={(e) => handleFilter(e)} // onBlur is included here
+							/>
 							<div className="form-group half-width">
 								<div style={{ display: "flex", alignItems: "center" }}>
 									<label htmlFor="vendorName">Vendor Name</label>
@@ -387,6 +369,7 @@ const VendorInvoiceUpload = () => {
 									id="vendorName"
 									name="vendorName"
 									value={vendorName}
+									className="form-input"
 									onChange={handleVendorNameChange}
 								>
 									<option value="" disabled>
@@ -405,83 +388,42 @@ const VendorInvoiceUpload = () => {
 									)}
 								</select>
 							</div>
-							<div className="form-group">
-								<div style={{ display: "flex", alignItems: "center" }}>
-									<label htmlFor="invoiceValue">Invoice Number</label>
-									<p
-										style={{
-											color: "red",
-											margin: "0 0 0 5px",
-											position: "relative",
-											top: "-3px",
-										}}
-									>
-										*
-									</p>
-								</div>
-								<input
-									type="number"
-									id="invoiceNumber"
-									name="invoiceNumber"
-									value={invoiceNumber}
-									onChange={handleChange}
-									//onBlur={uploadType === 're-upload' ? fetchInvoiceData : null}
-								/>
-								{!fetching && uploadType === "re-upload" && (
-									<button
-										type="button"
-										onClick={fetchInvoiceData}
-										style={{ marginTop: 10 }}
-									>
-										Fetch Details
-									</button>
-								)}
-								{fetching && <p>Fetching the Details...</p>}
-							</div>
-							<div className="form-group">
-								<div style={{ display: "flex", alignItems: "center" }}>
-									<label htmlFor="invoiceDate">Invoice Date</label>
-									<p
-										style={{
-											color: "red",
-											margin: "0 0 0 5px",
-											position: "relative",
-											top: "-3px",
-										}}
-									>
-										*
-									</p>
-								</div>
-								<input
-									type="date"
-									id="invoiceDate"
-									name="invoiceDate"
-									value={invoiceDate}
-									onChange={handleChange}
-								/>
-							</div>
-							<div className="form-group">
-								<div style={{ display: "flex", alignItems: "center" }}>
-									<label htmlFor="invoiceValue">Invoice Value</label>
-									<p
-										style={{
-											color: "red",
-											margin: "0 0 0 5px",
-											position: "relative",
-											top: "-3px",
-										}}
-									>
-										*
-									</p>
-								</div>
-								<input
-									type="number"
-									id="invoiceValue"
-									name="invoiceValue"
-									value={invoiceValue}
-									onChange={handleChange}
-								/>
-							</div>
+							<InputField
+								label="Invoice Number"
+								isRequired={true}
+								id="invoiceNumber"
+								name="invoiceNumber"
+								type="number"
+								value={invoiceNumber}
+								onChange={handleChange}
+								additionalContent={
+									!fetching && uploadType === "re-upload" ? (
+										<button type="button" onClick={fetchInvoiceData}>
+											Get the Details
+										</button>
+									) : fetching ? (
+										<p>Fetching the Details...</p>
+									) : null
+								}
+							/>
+							<InputField
+								label="Invoice Date"
+								isRequired={true}
+								id="invoiceDate"
+								name="invoiceDate"
+								type="date"
+								value={invoiceDate}
+								onChange={handleChange}
+							/>
+							<InputField
+								label="Invoice Value"
+								isRequired={true}
+								id="invoiceValue"
+								name="invoiceValue"
+								type="number"
+								value={invoiceValue}
+								onChange={handleChange}
+							/>
 							<div className="form-group">
 								<div style={{ display: "flex", alignItems: "center" }}>
 									<label htmlFor="invoiceCopy">Upload Invoice Copy</label>
@@ -501,6 +443,7 @@ const VendorInvoiceUpload = () => {
 									id="invoiceCopy"
 									name="invoiceCopy"
 									ref={fileInputRef}
+									className="form-input"
 									onChange={(e) => {
 										handleFileChange(e, "invoice");
 									}}
@@ -534,11 +477,16 @@ const VendorInvoiceUpload = () => {
 									name="poNumber"
 									value={purchaseOrderNumber}
 									onClick={fetchPoNumbers}
+									className="form-input"
 									onChange={(e) => setPurchaseOrderNumber(e.target.value)}
 								>
 									<option value="" disabled>
 										{poLoader ? "Loading POs..." : "Select PO Number"}
 									</option>
+									{purchaseOrderNumber &&
+										!poMap.some((po) => po.number === purchaseOrderNumber) && (
+											<option value={purchaseOrderNumber}>{purchaseOrderNumber}</option>
+										)}
 									{poMap?.length > 0
 										? poMap.map((po, index) => (
 												<option key={index} value={po.number}>
@@ -552,25 +500,24 @@ const VendorInvoiceUpload = () => {
 										  )}
 								</select>
 							</div>
+							<InputField
+								label="ONDC Contact Email"
+								isRequired={true}
+								id="ondcContactEmail"
+								name="ondcContactEmail"
+								type="email"
+								value={ondcContactEmail}
+								onChange={handleChange}
+								onBlur={(e) => {
+									handlePocEmailChange(e);
+								}}
+								additionalContent={
+									pocEmailStatus && (
+										<div style={{ color: "red" }}>{pocEmailStatus}</div>
+									)
+								}
+							/>
 							<div className="form-group">
-								<label htmlFor="ondcContactEmail">ONDC Contact Email</label>
-								<input
-									type="email"
-									id="ondcContactEmail"
-									name="ondcContactEmail"
-									value={ondcContactEmail}
-									onChange={(e) => {
-										handleChange(e);
-									}}
-									onBlur={(e) => {
-										handlePocEmailChange(e);
-									}}
-								/>
-								{pocEmailStatus && (
-									<div style={{ color: "red", marginTop: "5px" }}>{pocEmailStatus}</div>
-								)}
-							</div>
-							<div className="form-group half-width">
 								<div style={{ display: "flex", alignItems: "center" }}>
 									<label htmlFor="ondcContactPoc">ONDC Contact POC</label>
 									<p
@@ -588,6 +535,7 @@ const VendorInvoiceUpload = () => {
 									id="ondcContactPoc"
 									name="ondcContactPoc"
 									value={pocName}
+                  className="form-input"
 									onChange={handlePocNameChange}
 								>
 									<option value="" disabled>
@@ -626,6 +574,7 @@ const VendorInvoiceUpload = () => {
 									id="serviceAcceptanceFile"
 									name="serviceAcceptanceFile"
 									ref={serviceFileInputRef}
+                  className="form-input"
 									onChange={(e) => {
 										handleFileChange(e, "service");
 									}}

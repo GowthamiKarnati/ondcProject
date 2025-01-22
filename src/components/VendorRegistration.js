@@ -11,6 +11,7 @@ const baseUrl = process.env.REACT_APP_BASE_URL;
 
 const VendorRegistrationForm = () => {
 	const fileInputRef = useRef(null);
+    const panFileInputRef = useRef(null);
 	const [legalEntityName, setLegalEntityName] = useState("");
 	const [contactPersonName, setContactPersonName] = useState("");
 	const [designation, setDesignation] = useState("");
@@ -253,6 +254,9 @@ const VendorRegistrationForm = () => {
 				if (fileInputRef.current) {
 					fileInputRef.current.value = "";
 				}
+                if (panFileInputRef.current) {
+					panFileInputRef.current.value = "";
+				}
 			}
 		}
 	};
@@ -376,7 +380,7 @@ const VendorRegistrationForm = () => {
 								id="pan-card-upload"
 								name="pan-card-upload"
 								className="form-file-input"
-                                ref={fileInputRef}
+                                ref={panFileInputRef}
 								onChange={(e) => handleFileChange(e, "pan")}
 							/>
 						</div>
