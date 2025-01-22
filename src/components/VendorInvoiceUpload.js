@@ -12,7 +12,6 @@ import {
 } from "../utilities/utils";
 import { convertFileToBase64 } from "../utilities/fileUtils";
 import InputField from "./InputFeild";
-const baseUrl = process.env.REACT_APP_BASE_URL;
 
 const VendorInvoiceUpload = () => {
 	const [activeTab, setActiveTab] = useState("new-upload");
@@ -152,7 +151,7 @@ const VendorInvoiceUpload = () => {
 				alert("Please enter the invoice number");
 				return;
 			}
-			const { invoiceData, pocDetails } = await fetchInvoiceDataUtil(baseUrl, invoiceNumber);
+			const { invoiceData, pocDetails } = await fetchInvoiceDataUtil(invoiceNumber);
 			setUpdateRecordId(invoiceData.recordId);
 			setVerifyPan(invoiceData.vendorPAN);
 			setVerifyName(invoiceData.vendorName);
@@ -201,7 +200,7 @@ const VendorInvoiceUpload = () => {
 		}
 		if (uploadType === "new-upload" && invoiceNumber.trim()) {
 			try {
-				const exists = await isInvoiceExists(baseUrl, invoiceNumber);
+				const exists = await isInvoiceExists(invoiceNumber);
 				if (exists) {
 					alert(
 						"This invoice number already exists. You can update it by selecting the Re-upload option."
@@ -253,7 +252,7 @@ const VendorInvoiceUpload = () => {
 			...(uploadType === "re-upload" ? { updateRecordId: updateRecordId } : {}),
 		};
 		try {
-			const response = await submitInvoice(baseUrl, uploadType, payload);
+			const response = await submitInvoice(uploadType, payload);
 			setSubmissionStatus("success");
 			setTimeout(() => {
 				setSubmissionStatus(null);

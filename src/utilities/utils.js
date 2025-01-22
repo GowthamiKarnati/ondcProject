@@ -1,10 +1,9 @@
 import axios from "axios";
-const baseUrl = process.env.REACT_APP_BASE_URL;
 
 export const fetchVendorNames = async (cleanedValue) => {
 	try {
 		const encodedValue = encodeURIComponent(cleanedValue);
-		const response = await axios.get(`${baseUrl}/api/vendor/vendor-info?cleanedValue=${encodedValue}`);
+		const response = await axios.get(`/api/vendor/vendor-info?cleanedValue=${encodedValue}`);
 		return response.data.data.map((vendor) => ({
 			id: vendor.record_id,
 			name: vendor["Legal Entity Name"],
@@ -17,7 +16,7 @@ export const fetchVendorNames = async (cleanedValue) => {
 export const uploadBase64ToBackend = async (base64Data, mimeType) => {
 	try {
 		const response = await axios.post(
-			`${baseUrl}/api/vendor/file-upload`,
+			`/api/vendor/file-upload`,
 			{ base64Data, mimeType },
 			{
 				headers: {
@@ -34,7 +33,7 @@ export const uploadBase64ToBackend = async (base64Data, mimeType) => {
 export const fetchPocData = async (emailValue) => {
 	try {
 		const verifiedValue = encodeURIComponent(emailValue);
-		const response = await axios.get(`${baseUrl}/api/vendor/poc-name?verifyValue=${verifiedValue}`);
+		const response = await axios.get(`/api/vendor/poc-name?verifyValue=${verifiedValue}`);
 		return response.data.data.map((poc) => ({
 			id: poc.record_id,
 			name: poc.Name,
@@ -44,13 +43,13 @@ export const fetchPocData = async (emailValue) => {
 		//throw error;
 	}
 };
-export const fetchInvoiceDataUtil = async (baseUrl, invoiceNumber) => {
+export const fetchInvoiceDataUtil = async (invoiceNumber) => {
 	try {
 		const encodedValue = encodeURIComponent(invoiceNumber.trim());
 		if (!encodedValue) {
 			throw new Error("Invoice number is empty.");
 		}
-		const response = await axios.get(`${baseUrl}/api/vendor/get-invoice-data?number=${encodedValue}`);
+		const response = await axios.get(`/api/vendor/get-invoice-data?number=${encodedValue}`);
 		if (response.data && Array.isArray(response.data.data) && response.data.data.length > 0) {
 			const invoiceData = response.data.data[0];
 			const attachments = JSON.parse(invoiceData["Invoice Attachment"] || "[]");
@@ -58,7 +57,7 @@ export const fetchInvoiceDataUtil = async (baseUrl, invoiceNumber) => {
 			let pocDetails = null;
 			if (invoiceData["ONDC Point of Contact"]) {
 				const encodedPoc = encodeURIComponent(invoiceData["ONDC Point of Contact"]);
-				const pocResponse = await axios.get(`${baseUrl}/api/vendor/get-poc-email?name=${encodedPoc}`);
+				const pocResponse = await axios.get(`/api/vendor/get-poc-email?name=${encodedPoc}`);
 				if (pocResponse.data.data.length > 0) {
 					pocDetails = {
 						email: pocResponse.data.data[0].Email,
@@ -94,21 +93,18 @@ export const fetchInvoiceDataUtil = async (baseUrl, invoiceNumber) => {
 		throw new Error(error.message || "Error fetching invoice data.");
 	}
 };
-export const isInvoiceExists = async (baseUrl, invoiceNumber) => {
+export const isInvoiceExists = async (invoiceNumber) => {
 	const encodedValue = encodeURIComponent(invoiceNumber);
 	try {
-		const response = await axios.get(`${baseUrl}/api/vendor/get-invoice-data?number=${encodedValue}`);
+		const response = await axios.get(`/api/vendor/get-invoice-data?number=${encodedValue}`);
 		return response.data?.data?.length > 0;
 	} catch (error) {
 		console.error("Error while checking invoice existence:", error);
 		throw new Error("An error occurred while checking the invoice number. Please try again.");
 	}
 };
-export const submitInvoice = async (baseUrl, uploadType, payload) => {
-	const url =
-		uploadType === "new-upload"
-			? `${baseUrl}/api/vendor/upload-invoice`
-			: `${baseUrl}/api/vendor/update-invoice`;
+export const submitInvoice = async (uploadType, payload) => {
+	const url = uploadType === "new-upload" ? `/api/vendor/upload-invoice` : `/api/vendor/update-invoice`;
 
 	try {
 		const response = await axios.post(url, payload, {
@@ -124,7 +120,7 @@ export const submitInvoice = async (baseUrl, uploadType, payload) => {
 };
 export const fetchNumbers = async (vendorName) => {
 	try {
-		const response = await axios.get(`${baseUrl}/api/vendor/get-po-numbers?vendorName=${vendorName}`);
+		const response = await axios.get(`/api/vendor/get-po-numbers?vendorName=${vendorName}`);
 		return response.data.data.map((po) => ({
 			number: po["PO Number"],
 		}));

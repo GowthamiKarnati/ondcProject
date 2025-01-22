@@ -7,7 +7,6 @@ import TypeOfEntity from "./TypeofEntity";
 import { convertFileToBase64 } from "../utilities/fileUtils";
 import { uploadBase64ToBackend } from "../utilities/utils";
 import { toTitleCase } from "../utilities/toTitleCase";
-const baseUrl = process.env.REACT_APP_BASE_URL;
 
 const VendorRegistrationForm = () => {
 	const fileInputRef = useRef(null);
@@ -219,7 +218,7 @@ const VendorRegistrationForm = () => {
 			panCard,
 		};
 		try {
-			await axios.post(`${baseUrl}/api/vendor/create`, data, {
+			await axios.post(`/api/vendor/create`, data, {
 				headers: {
 					"Content-Type": "application/json",
 				},
