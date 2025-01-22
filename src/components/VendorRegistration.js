@@ -11,7 +11,7 @@ const baseUrl = process.env.REACT_APP_BASE_URL;
 
 const VendorRegistrationForm = () => {
 	const fileInputRef = useRef(null);
-    const panFileInputRef = useRef(null);
+	const panFileInputRef = useRef(null);
 	const [legalEntityName, setLegalEntityName] = useState("");
 	const [contactPersonName, setContactPersonName] = useState("");
 	const [designation, setDesignation] = useState("");
@@ -58,7 +58,6 @@ const VendorRegistrationForm = () => {
 	};
 
 	const handleFileChange = async (e, fileType) => {
-		console.log(fileType);
 		const file = e.target.files[0];
 		if (file) {
 			try {
@@ -148,120 +147,133 @@ const VendorRegistrationForm = () => {
 			!ifscCode
 		) {
 			alert("Please fill all required fields.");
-		} else if (["Private Limited", "Public Limited", "Section 8"].includes(typeOfEntity)) {
+			return;
+		}
+		if (["Private Limited", "Public Limited", "Section 8"].includes(typeOfEntity)) {
 			if (!cinNo) {
 				alert("Please provide the CIN No.");
 				return;
 			}
-			if (!CoiFile) {
+			if (CoiFile.length === 0) {
 				alert("Please upload the Certificate of Incorporation (COI).");
 				return;
 			}
-		} else if (isMsme === null) {
+		}
+		if (isMsme === null) {
 			alert("Please select whether you are registered under the MSME Act.");
-		} else if (isGst === null) {
+			return;
+		}
+		if (isGst === null) {
 			alert("Please select whether you are registered GST.");
-		} else if (isMsme && (!msmeNumber || udyamFiles.length === 0)) {
+			return;
+		}
+		if (isMsme && (!msmeNumber || udyamFiles.length === 0)) {
 			if (!msmeNumber) {
 				alert("Please enter your MSME Registration Number.");
 				return;
 			}
 			alert("Please upload the required MSME certificate.");
-		} else if (isGst && (!gstNumber || gstFiles.length === 0)) {
+			return;
+		}
+		if (isGst && (!gstNumber || gstFiles.length === 0)) {
 			if (!gstNumber) {
 				alert("Please enter your GST Registration Number ");
+				return;
 			}
 			alert("Please upload the required GST certificate.");
-		} else if (cancelledFiles.length === 0 || panCard.length === 0) {
+			return;
+		}
+		console.log("cancelledFiles", cancelledFiles);
+		if (cancelledFiles.length === 0 || panCard.length === 0) {
 			alert("Please upload the file.");
-		} else {
-			setIsSubmitting(true);
-			const data = {
-				legalEntityName: toTitleCase(legalEntityName),
-				contactPersonName,
-				designation,
-				contactNumber,
-				emailId,
-				address,
-				state,
-				pinCode,
-				panCardNumber,
-				typeOfEntity,
-				isMsme,
-				udyamFiles,
-				isGst,
-				gstFiles,
-				gstNumber,
-				bankName,
-				beneficiaryName,
-				accountNumber,
-				ifscCode,
-				cancelledFiles,
-				// interested,
-				// notinterested,
-				tradeName,
-				cinNo,
-				CoiFile,
-				msmeNumber,
-				panCard,
-			};
-			try {
-				await axios.post(`${baseUrl}/api/vendor/create`, data, {
-					headers: {
-						"Content-Type": "application/json",
-					},
-				});
+			return;
+		}
+		setIsSubmitting(true);
+		const data = {
+			legalEntityName: toTitleCase(legalEntityName),
+			contactPersonName,
+			designation,
+			contactNumber,
+			emailId,
+			address,
+			state,
+			pinCode,
+			panCardNumber,
+			typeOfEntity,
+			isMsme,
+			udyamFiles,
+			isGst,
+			gstFiles,
+			gstNumber,
+			bankName,
+			beneficiaryName,
+			accountNumber,
+			ifscCode,
+			cancelledFiles,
+			// interested,
+			// notinterested,
+			tradeName,
+			cinNo,
+			CoiFile,
+			msmeNumber,
+			panCard,
+		};
+		try {
+			await axios.post(`${baseUrl}/api/vendor/create`, data, {
+				headers: {
+					"Content-Type": "application/json",
+				},
+			});
 
-				setSubmissionStatus("success");
-				setTimeout(() => {
-					setSubmissionStatus(null);
-				}, 4000);
-			} catch (err) {
-				console.error("Error:", err);
-				setSubmissionStatus("error");
-				setTimeout(() => {
-					setSubmissionStatus(null);
-				}, 5000);
-			} finally {
-				setIsSubmitting(false);
-				setLegalEntityName("");
-				setContactPersonName("");
-				setDesignation("");
-				setContactNumber("");
-				setEmailId("");
-				setAddress("");
-				setState("");
-				setPinCode("");
-				setPanCardNumber("");
-				setTypeOfEntity("");
-				setIsMsme(null);
-				setIsGst(null);
-				setGstNumber("");
-				setBankName("");
-				setBeneficiaryName("");
-				setAccountNumber("");
-				setIfscCode("");
-				setUdyamFiles([]);
-				setGstFiles([]);
-				setCancelledFiles([]);
-				setInterested(null);
-				setNotinterested(null);
-				setTradeName("");
-				setCinNo("");
-				setCoiFiles([]);
-				setMsmeNumber("");
-				setPanCard([]);
-				if (fileInputRef.current) {
-					fileInputRef.current.value = "";
-				}
-                if (panFileInputRef.current) {
-					panFileInputRef.current.value = "";
-				}
+			setSubmissionStatus("success");
+			setTimeout(() => {
+				setSubmissionStatus(null);
+			}, 4000);
+		} catch (err) {
+			console.error("Error:", err);
+			setSubmissionStatus("error");
+			setTimeout(() => {
+				setSubmissionStatus(null);
+			}, 5000);
+		} finally {
+			setIsSubmitting(false);
+			setLegalEntityName("");
+			setContactPersonName("");
+			setDesignation("");
+			setContactNumber("");
+			setEmailId("");
+			setAddress("");
+			setState("");
+			setPinCode("");
+			setPanCardNumber("");
+			setTypeOfEntity("");
+			setIsMsme(null);
+			setIsGst(null);
+			setGstNumber("");
+			setBankName("");
+			setBeneficiaryName("");
+			setAccountNumber("");
+			setIfscCode("");
+			setUdyamFiles([]);
+			setGstFiles([]);
+			setCancelledFiles([]);
+			setInterested(null);
+			setNotinterested(null);
+			setTradeName("");
+			setCinNo("");
+			setCoiFiles([]);
+			setMsmeNumber("");
+			setPanCard([]);
+			if (fileInputRef.current) {
+				fileInputRef.current.value = "";
+			}
+			if (panFileInputRef.current) {
+				panFileInputRef.current.value = "";
 			}
 		}
 	};
 	return (
-		<div className="main-container"style={{marginTop:130}}>
+		<div className="main-container" style={{ marginTop: 130 }}>
 			<Navbar />
 			<div className="form-container">
 				<h2 className="form-title">Vendor Registration Form</h2>
@@ -380,7 +392,7 @@ const VendorRegistrationForm = () => {
 								id="pan-card-upload"
 								name="pan-card-upload"
 								className="form-file-input"
-                                ref={panFileInputRef}
+								ref={panFileInputRef}
 								onChange={(e) => handleFileChange(e, "pan")}
 							/>
 						</div>

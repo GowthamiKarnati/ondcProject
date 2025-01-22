@@ -184,7 +184,7 @@ const VendorInvoiceUpload = () => {
 	const handleSubmit = async (e) => {
 		e.preventDefault();
 		if (uploadType === "re-upload" && verifyInvoice !== invoiceNumber) {
-			alert("Invoice number is not valid");
+			alert("Please check the Invoice Number");
 			return;
 		}
 		if (uploadType === "re-upload" && verifyPan !== vendorPanNumber && verifyName !== vendorName) {
@@ -219,47 +219,53 @@ const VendorInvoiceUpload = () => {
 			!invoiceDate ||
 			!invoiceValue ||
 			!purchaseOrderNumber ||
-			!pocName
+			!pocName ||
+			!invoiceNumber
 		) {
 			alert("Please fill in all required fields.");
 			return;
-		} else if (files.length === 0 || serviceAcceptanceFile.length === 0) {
-			alert("please upload the file");
-			return;
-		} else {
-			setLoaderSubmit(true);
-			const payload = {
-				...(uploadType !== "re-upload" && {
-					vendorPanNumber: vendorPanNumber.toUpperCase(),
-					vendorName,
-				}),
-				invoiceDate,
-				invoiceValue,
-				purchaseOrderNumber,
-				invoiceNumber,
-				ondcContactPocId: pocRecordId,
-				ondcContactPocName: pocName,
-				files,
-				record_id: recordId,
-				serviceAcceptanceFile,
-				...(uploadType === "re-upload" ? { updateRecordId: updateRecordId } : {}),
-			};
-			try {
-				const response = await submitInvoice(baseUrl, uploadType, payload);
-				console.log("Server response:", response);
-				setSubmissionStatus("success");
-				setTimeout(() => {
-					setSubmissionStatus(null);
-				}, 3000);
-			} catch (error) {
-				setSubmissionStatus("error");
-				setTimeout(() => {
-					setSubmissionStatus(null);
-				}, 3000);
-			} finally {
-				setLoaderSubmit(false);
-				handleReset();
+		}
+		if (files.length === 0 || serviceAcceptanceFile.length === 0) {
+			if (files.length === 0) {
+				alert("Please upload the Invoice copy");
+				return;
 			}
+			if (serviceAcceptanceFile.length === 0) {
+				alert("Please upload the Service Acceptance File");
+				return;
+			}
+		}
+		setLoaderSubmit(true);
+		const payload = {
+			...(uploadType !== "re-upload" && {
+				vendorPanNumber: vendorPanNumber.toUpperCase(),
+				vendorName,
+			}),
+			invoiceDate,
+			invoiceValue,
+			purchaseOrderNumber,
+			invoiceNumber,
+			ondcContactPocId: pocRecordId,
+			ondcContactPocName: pocName,
+			files,
+			record_id: recordId,
+			serviceAcceptanceFile,
+			...(uploadType === "re-upload" ? { updateRecordId: updateRecordId } : {}),
+		};
+		try {
+			const response = await submitInvoice(baseUrl, uploadType, payload);
+			setSubmissionStatus("success");
+			setTimeout(() => {
+				setSubmissionStatus(null);
+			}, 3000);
+		} catch (error) {
+			setSubmissionStatus("error");
+			setTimeout(() => {
+				setSubmissionStatus(null);
+			}, 3000);
+		} finally {
+			setLoaderSubmit(false);
+			handleReset();
 		}
 	};
 	const handleVendorNameChange = async (e) => {
@@ -315,6 +321,8 @@ const VendorInvoiceUpload = () => {
 		if (serviceFileInputRef.current) {
 			serviceFileInputRef.current.value = "";
 		}
+		setFiles([]);
+		setServiceAcceptanceFile([]);
 	};
 
 	return (
@@ -512,9 +520,7 @@ const VendorInvoiceUpload = () => {
 									handlePocEmailChange(e);
 								}}
 								additionalContent={
-									pocEmailStatus && (
-										<div style={{ color: "red" }}>{pocEmailStatus}</div>
-									)
+									pocEmailStatus && <div style={{ color: "red" }}>{pocEmailStatus}</div>
 								}
 							/>
 							<div className="form-group">
@@ -535,7 +541,7 @@ const VendorInvoiceUpload = () => {
 									id="ondcContactPoc"
 									name="ondcContactPoc"
 									value={pocName}
-                  className="form-input"
+									className="form-input"
 									onChange={handlePocNameChange}
 								>
 									<option value="" disabled>
@@ -574,7 +580,7 @@ const VendorInvoiceUpload = () => {
 									id="serviceAcceptanceFile"
 									name="serviceAcceptanceFile"
 									ref={serviceFileInputRef}
-                  className="form-input"
+									className="form-input"
 									onChange={(e) => {
 										handleFileChange(e, "service");
 									}}

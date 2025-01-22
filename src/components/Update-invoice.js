@@ -117,7 +117,6 @@ const UpdateInvoice = () => {
     try {
       setLoaderforPoc(true);
       const verifiedValue = encodeURIComponent(value);
-      console.log(verifiedValue)
       const response = await axios.get(`${baseUrl}/api/vendor/poc-name?verifyValue=${verifiedValue}`)
       if (response.data.data.length > 0) {
         const poc = response.data.data[0];

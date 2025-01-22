@@ -50,13 +50,11 @@ export const fetchInvoiceDataUtil = async (baseUrl, invoiceNumber) => {
 		if (!encodedValue) {
 			throw new Error("Invoice number is empty.");
 		}
-
 		const response = await axios.get(`${baseUrl}/api/vendor/get-invoice-data?number=${encodedValue}`);
-		console.log(response.data.data);
 		if (response.data && Array.isArray(response.data.data) && response.data.data.length > 0) {
 			const invoiceData = response.data.data[0];
 			const attachments = JSON.parse(invoiceData["Invoice Attachment"] || "[]");
-			const serviceAttachments = JSON.parse(invoiceData["Service Acceptance File"] || "[]")
+			const serviceAttachments = JSON.parse(invoiceData["Service Acceptance File"] || "[]");
 			let pocDetails = null;
 			if (invoiceData["ONDC Point of Contact"]) {
 				const encodedPoc = encodeURIComponent(invoiceData["ONDC Point of Contact"]);
@@ -83,9 +81,9 @@ export const fetchInvoiceDataUtil = async (baseUrl, invoiceNumber) => {
 					invoiceNumber: invoiceData["Invoice Number"] || "",
 					attachments: attachments,
 					filePath: attachments.length > 0 ? attachments[0].path : "",
-					serviceAttachments : serviceAttachments,
+					serviceAttachments: serviceAttachments,
 					serviceFilePath: serviceAttachments.length > 0 ? serviceAttachments[0].path : "",
-					workflowStatus: invoiceData['Workflow Status'] || "",
+					workflowStatus: invoiceData["Workflow Status"] || "",
 				},
 				pocDetails,
 			};
