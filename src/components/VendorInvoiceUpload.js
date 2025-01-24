@@ -12,10 +12,13 @@ import {
 } from "../utilities/utils";
 import { convertFileToBase64 } from "../utilities/fileUtils";
 import InputField from "./InputFeild";
+import InvoiceTabs from "./InvoiceTabs";
+import CheckInvoiceStatus from "./CheckInvoiceStatus";
 
 const VendorInvoiceUpload = () => {
+  const fileInputRef = useRef(null);
+	const serviceFileInputRef = useRef(null);
 	const [activeTab, setActiveTab] = useState("new-upload");
-	const [uploadType, setUploadType] = useState("new-upload");
 	const [vendorPanNumber, setVendorPanNumber] = useState("");
 	const [vendorName, setVendorName] = useState("");
 	const [vendorMap, setVendorMap] = useState([]);
@@ -23,8 +26,6 @@ const VendorInvoiceUpload = () => {
 	const [invoiceValue, setInvoiceValue] = useState("");
 	const [purchaseOrderNumber, setPurchaseOrderNumber] = useState("");
 	const [submissionStatus, setSubmissionStatus] = useState(null);
-	const fileInputRef = useRef(null);
-	const serviceFileInputRef = useRef(null);
 	const [pocName, setPocName] = useState("");
 	const [loading, setLoading] = useState(false);
 	const [files, setFiles] = useState([]);
@@ -151,7 +152,7 @@ const VendorInvoiceUpload = () => {
 				alert("Please enter the invoice number");
 				return;
 			}
-			const { invoiceData, pocDetails } = await fetchInvoiceDataUtil(invoiceNumber);
+			const { invoiceData, pocDetails } = await fetchInvoiceDataUtil(invoiceNumber, vendorName);
 			setUpdateRecordId(invoiceData.recordId);
 			setVerifyPan(invoiceData.vendorPAN);
 			setVerifyName(invoiceData.vendorName);
@@ -176,21 +177,22 @@ const VendorInvoiceUpload = () => {
 			}
 		} catch (error) {
 			alert(error.message);
+      return;
 		} finally {
 			setFetching(false);
 		}
 	};
 	const handleSubmit = async (e) => {
 		e.preventDefault();
-		if (uploadType === "re-upload" && verifyInvoice !== invoiceNumber) {
+		if (activeTab === "re-upload" && verifyInvoice !== invoiceNumber) {
 			alert("Please check the Invoice Number");
 			return;
 		}
-		if (uploadType === "re-upload" && verifyPan !== vendorPanNumber && verifyName !== vendorName) {
+		if (activeTab === "re-upload" && verifyPan !== vendorPanNumber && verifyName !== vendorName) {
 			alert("Please verify the Vendor Pan and Name");
 			return;
 		}
-		if (uploadType === "re-upload") {
+		if (activeTab === "re-upload") {
 			if (workflowStatus !== "New" && workflowStatus !== "Dept Approval Pending") {
 				alert(
 					"Your invoice has been approved and cannot be reuploaded at this time. For further assistance, please reach out to your ONDC point of contact."
@@ -198,9 +200,9 @@ const VendorInvoiceUpload = () => {
 				return;
 			}
 		}
-		if (uploadType === "new-upload" && invoiceNumber.trim()) {
+		if (activeTab === "new-upload" && invoiceNumber.trim()) {
 			try {
-				const exists = await isInvoiceExists(invoiceNumber);
+				const exists = await isInvoiceExists(invoiceNumber, vendorName);
 				if (exists) {
 					alert(
 						"This invoice number already exists. You can update it by selecting the Re-upload option."
@@ -236,7 +238,7 @@ const VendorInvoiceUpload = () => {
 		}
 		setLoaderSubmit(true);
 		const payload = {
-			...(uploadType !== "re-upload" && {
+			...(activeTab !== "re-upload" && {
 				vendorPanNumber: vendorPanNumber.toUpperCase(),
 				vendorName,
 			}),
@@ -249,10 +251,10 @@ const VendorInvoiceUpload = () => {
 			files,
 			record_id: recordId,
 			serviceAcceptanceFile,
-			...(uploadType === "re-upload" ? { updateRecordId: updateRecordId } : {}),
+			...(activeTab === "re-upload" ? { updateRecordId: updateRecordId } : {}),
 		};
 		try {
-			const response = await submitInvoice(uploadType, payload);
+			const response = await submitInvoice(activeTab, payload);
 			setSubmissionStatus("success");
 			setTimeout(() => {
 				setSubmissionStatus(null);
@@ -296,7 +298,6 @@ const VendorInvoiceUpload = () => {
 		}
 	};
 	const handleTabChange = (tab) => {
-		setUploadType(tab);
 		setActiveTab(tab);
 		handleReset();
 	};
@@ -322,30 +323,33 @@ const VendorInvoiceUpload = () => {
 		}
 		setFiles([]);
 		setServiceAcceptanceFile([]);
+    setUpdateRecordId('');
+    setWorkflowStatus('');
+    setVerifyName('');
+    setVerifyPan('');
+    setVerifyInvoice('');
+    setInvoiceNumber('');
+    setPocEmailStatus('');
 	};
 
 	return (
 		<div className="main-container" style={{ marginTop: 75 }}>
 			<Navbar />
-			<div className="tab-container" style={{ marginBottom: 10 }}>
-				<button
-					className={`tab ${activeTab === "new-upload" ? "active" : ""}`}
-					onClick={() => handleTabChange("new-upload")}
-				>
-					Invoice Upload
-				</button>
-				<button
-					className={`tab ${activeTab === "re-upload" ? "active" : ""}`}
-					onClick={() => handleTabChange("re-upload")}
-				>
-					Invoice Re-upload
-				</button>
-			</div>
+			<InvoiceTabs activeTab={activeTab} handleTabChange={handleTabChange} />
 			<div className="main-content">
 				<div className="form-container">
 					<div className="form-header">
-						<h2 className="form-title">Vendor Invoice Upload</h2>
+						<h2 className="form-title">
+							{activeTab === "re-upload"
+								? "Vendor Invoice Re-Upload"
+								: activeTab === "check-status"
+								? "Check Invoice Status"
+								: "Vendor Invoice Upload"}
+						</h2>
 					</div>
+          {activeTab === 'check-status'? (
+            <CheckInvoiceStatus />
+          ):(
 					<form onSubmit={handleSubmit} onReset={handleReset} encType="multipart/form-data">
 						<div className="grid-container">
 							<InputField
@@ -360,7 +364,7 @@ const VendorInvoiceUpload = () => {
 							/>
 							<div className="form-group half-width">
 								<div style={{ display: "flex", alignItems: "center" }}>
-									<label htmlFor="vendorName">Vendor Name</label>
+									<label htmlFor="vendorName">Company Name</label>
 									<p
 										style={{
 											color: "red",
@@ -380,7 +384,7 @@ const VendorInvoiceUpload = () => {
 									onChange={handleVendorNameChange}
 								>
 									<option value="" disabled>
-										{loaderforName ? "Getting vendor names..." : "Select Vendor"}
+										{loaderforName ? "Getting company names..." : "Select Company"}
 									</option>
 									{!loaderforName &&
 										vendorMap?.map((vendor) => (
@@ -390,7 +394,7 @@ const VendorInvoiceUpload = () => {
 										))}
 									{!loaderforName && vendorMap?.length === 0 && (
 										<option value="" disabled>
-											No vendor names available
+											No company names available
 										</option>
 									)}
 								</select>
@@ -404,7 +408,7 @@ const VendorInvoiceUpload = () => {
 								value={invoiceNumber}
 								onChange={handleChange}
 								additionalContent={
-									!fetching && uploadType === "re-upload" ? (
+									!fetching && activeTab === "re-upload" ? (
 										<button type="button" onClick={fetchInvoiceData}>
 											Get the Details
 										</button>
@@ -623,6 +627,7 @@ const VendorInvoiceUpload = () => {
 							<div style={{ color: "red" }}>Error submitting form. Please try again.</div>
 						)}
 					</form>
+          )}
 				</div>
 			</div>
 		</div>

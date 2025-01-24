@@ -284,7 +284,7 @@ const VendorRegistrationForm = () => {
 								isRequired={true}
 								id="legal-entity-name"
 								name="legal-entity-name"
-								placeholder="Cheque will be issued in this name"
+								placeholder="As per PAN"
 								value={legalEntityName}
 								onChange={handleInputChange(setLegalEntityName)}
 							/>
@@ -293,6 +293,7 @@ const VendorRegistrationForm = () => {
 								isRequired={true}
 								id="tarde-name"
 								name="trade-name"
+                                placeholder="As per bank records/GST"
 								value={tradeName}
 								onChange={handleInputChange(setTradeName)}
 							/>
