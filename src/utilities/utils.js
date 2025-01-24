@@ -43,13 +43,14 @@ export const fetchPocData = async (emailValue) => {
 		//throw error;
 	}
 };
-export const fetchInvoiceDataUtil = async (invoiceNumber) => {
+export const fetchInvoiceDataUtil = async (invoiceNumber, companyName) => {
 	try {
 		const encodedValue = encodeURIComponent(invoiceNumber.trim());
+		const encodedCompanyName = encodeURIComponent(companyName.trim());
 		if (!encodedValue) {
 			throw new Error("Invoice number is empty.");
 		}
-		const response = await axios.get(`/api/vendor/get-invoice-data?number=${encodedValue}`);
+		const response = await axios.get(`/api/vendor/get-invoice-data?number=${encodedValue}&companyName=${encodedCompanyName}`);
 		if (response.data && Array.isArray(response.data.data) && response.data.data.length > 0) {
 			const invoiceData = response.data.data[0];
 			const attachments = JSON.parse(invoiceData["Invoice Attachment"] || "[]");
@@ -87,16 +88,17 @@ export const fetchInvoiceDataUtil = async (invoiceNumber) => {
 				pocDetails,
 			};
 		} else {
-			throw new Error("No data found for the entered Invoice Value.");
+			throw new Error("No data found for the entered Invoice Number.Check the invoice Number and Company Name");
 		}
 	} catch (error) {
 		throw new Error(error.message || "Error fetching invoice data.");
 	}
 };
-export const isInvoiceExists = async (invoiceNumber) => {
+export const isInvoiceExists = async (invoiceNumber, companyName) => {
 	const encodedValue = encodeURIComponent(invoiceNumber);
+	const encodedCompanyName = encodeURIComponent(companyName.trim());
 	try {
-		const response = await axios.get(`/api/vendor/get-invoice-data?number=${encodedValue}`);
+		const response = await axios.get(`/api/vendor/get-invoice-data?number=${encodedValue}&companyName=${encodedCompanyName}`);
 		return response.data?.data?.length > 0;
 	} catch (error) {
 		console.error("Error while checking invoice existence:", error);
