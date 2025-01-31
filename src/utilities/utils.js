@@ -9,8 +9,8 @@ export const fetchVendorNames = async (cleanedValue) => {
 			name: vendor["Legal Entity Name"],
 		}));
 	} catch (err) {
-		console.error("Error in fetchVendorNames:", err);
-		//throw err;
+		console.log("Error in fetchVendorNames:", err);
+		throw new Error("Failed to fetch company name.");
 	}
 };
 export const uploadBase64ToBackend = async (base64Data, mimeType) => {
@@ -26,8 +26,8 @@ export const uploadBase64ToBackend = async (base64Data, mimeType) => {
 		);
 		return response.data;
 	} catch (err) {
-		console.error("Error uploading base64 file:", err);
-		//throw err;
+		alert(`${err.response.data.error}`);
+		return;
 	}
 };
 export const fetchPocData = async (emailValue) => {
@@ -50,9 +50,11 @@ export const fetchInvoiceDataUtil = async (invoiceNumber, companyName) => {
 		if (!encodedValue) {
 			throw new Error("Invoice number is empty.");
 		}
-		const response = await axios.get(`/api/vendor/get-invoice-data?number=${encodedValue}&companyName=${encodedCompanyName}`);
-		if (response.data && Array.isArray(response.data.data) && response.data.data.length > 0) {
-			const invoiceData = response.data.data[0];
+		const response = await axios.get(
+			`/api/vendor/get-invoice-data?number=${encodedValue}&companyName=${encodedCompanyName}`
+		);
+		const invoiceData = response.data.data;
+		if (invoiceData && Object.keys(invoiceData).length > 0) {
 			const attachments = JSON.parse(invoiceData["Invoice Attachment"] || "[]");
 			const serviceAttachments = JSON.parse(invoiceData["Service Acceptance File"] || "[]");
 			let pocDetails = null;
@@ -84,11 +86,14 @@ export const fetchInvoiceDataUtil = async (invoiceNumber, companyName) => {
 					serviceAttachments: serviceAttachments,
 					serviceFilePath: serviceAttachments.length > 0 ? serviceAttachments[0].path : "",
 					workflowStatus: invoiceData["Workflow Status"] || "",
+					poNumbers: invoiceData["PO Numbers"] || "",
 				},
 				pocDetails,
 			};
 		} else {
-			throw new Error("No data found for the entered Invoice Number.Check the invoice Number and Company Name");
+			throw new Error(
+				"No data found for the entered Invoice Number.Check the invoice Number and Company Name"
+			);
 		}
 	} catch (error) {
 		throw new Error(error.message || "Error fetching invoice data.");
@@ -98,8 +103,10 @@ export const isInvoiceExists = async (invoiceNumber, companyName) => {
 	const encodedValue = encodeURIComponent(invoiceNumber);
 	const encodedCompanyName = encodeURIComponent(companyName.trim());
 	try {
-		const response = await axios.get(`/api/vendor/get-invoice-data?number=${encodedValue}&companyName=${encodedCompanyName}`);
-		return response.data?.data?.length > 0;
+		const response = await axios.get(
+			`/api/vendor/get-invoice-data?number=${encodedValue}&companyName=${encodedCompanyName}`
+		);
+		return response.data?.data && Object.keys(response.data.data).length > 0;
 	} catch (error) {
 		console.error("Error while checking invoice existence:", error);
 		throw new Error("An error occurred while checking the invoice number. Please try again.");
@@ -124,6 +131,7 @@ export const fetchNumbers = async (vendorName) => {
 	try {
 		const response = await axios.get(`/api/vendor/get-po-numbers?vendorName=${vendorName}`);
 		return response.data.data.map((po) => ({
+			id: po.record_id,
 			number: po["PO Number"],
 		}));
 	} catch (error) {

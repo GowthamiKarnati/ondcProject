@@ -14,9 +14,10 @@ import { convertFileToBase64 } from "../utilities/fileUtils";
 import InputField from "./InputFeild";
 import InvoiceTabs from "./InvoiceTabs";
 import CheckInvoiceStatus from "./CheckInvoiceStatus";
+import PurchaseOrderCheckboxes from "./PONumberCom";
 
 const VendorInvoiceUpload = () => {
-  const fileInputRef = useRef(null);
+	const fileInputRef = useRef(null);
 	const serviceFileInputRef = useRef(null);
 	const [activeTab, setActiveTab] = useState("new-upload");
 	const [vendorPanNumber, setVendorPanNumber] = useState("");
@@ -24,7 +25,7 @@ const VendorInvoiceUpload = () => {
 	const [vendorMap, setVendorMap] = useState([]);
 	const [invoiceDate, setInvoiceDate] = useState("");
 	const [invoiceValue, setInvoiceValue] = useState("");
-	const [purchaseOrderNumber, setPurchaseOrderNumber] = useState("");
+	const [purchaseOrderNumber, setPurchaseOrderNumber] = useState([]);
 	const [submissionStatus, setSubmissionStatus] = useState(null);
 	const [pocName, setPocName] = useState("");
 	const [loading, setLoading] = useState(false);
@@ -50,6 +51,8 @@ const VendorInvoiceUpload = () => {
 	const [workflowStatus, setWorkflowStatus] = useState("");
 	const [poMap, setPoMap] = useState([]);
 	const [poLoader, setPoLoader] = useState(false);
+	const [selectedPoNumbers, setSelectedPoNumbers] = useState([]);
+	const [selectedPOId, setselectedPOId] = useState([]);
 	const handleChange = (e) => {
 		const { name, value } = e.target;
 		switch (name) {
@@ -66,15 +69,13 @@ const VendorInvoiceUpload = () => {
 			case "invoiceValue":
 				setInvoiceValue(value);
 				break;
-			case "purchaseOrderNumber":
-				setPurchaseOrderNumber(value);
-				break;
 			case "ondcContactPoc":
 				pocName(value);
 				break;
 			case "ondcContactEmail":
 				setOndcContactEmail(value);
 				setPocName("");
+				setPocEmailStatus("");
 				break;
 			case "invoiceNumber":
 				setInvoiceNumber(value);
@@ -99,6 +100,15 @@ const VendorInvoiceUpload = () => {
 
 	const handleFileChange = async (e, fileType) => {
 		const file = e.target.files[0];
+		if (file?.type === "image/svg+xml") {
+			alert("SVG files are not allowed. Please upload a PNG, JPEG, or PDF.");
+			return;
+		}
+		if (fileType === "invoice" && activeTab === "new-upload") {
+			setFiles([]);
+		} else if (fileType === "service" && activeTab === "new-upload") {
+			setServiceAcceptanceFile([]);
+		}
 		if (file) {
 			try {
 				const base64File = await convertFileToBase64(file);
@@ -157,7 +167,6 @@ const VendorInvoiceUpload = () => {
 			setVerifyPan(invoiceData.vendorPAN);
 			setVerifyName(invoiceData.vendorName);
 			setInvoiceDate(invoiceData.invoiceDate);
-			setPurchaseOrderNumber(invoiceData.poNumber);
 			setInvoiceValue(invoiceData.invoiceValue);
 			setVerifyInvoice(invoiceData.invoiceNumber);
 			setFiles(invoiceData.attachments);
@@ -165,6 +174,13 @@ const VendorInvoiceUpload = () => {
 			setServiceAcceptanceFile(invoiceData.serviceAttachments);
 			setServiceFilePath(invoiceData.serviceFilePath);
 			setWorkflowStatus(invoiceData["workflowStatus"]);
+			setPurchaseOrderNumber(
+				invoiceData.poNumbers.map((po) => ({
+					id: po.record_id,
+					number: po["PO num"],
+				}))
+			);
+			setselectedPOId(invoiceData.poNumbers.map((po) => po.record_id));
 			if (pocDetails) {
 				setOndcContactEmail(pocDetails.email);
 				setPocMap(pocDetails.data);
@@ -177,7 +193,7 @@ const VendorInvoiceUpload = () => {
 			}
 		} catch (error) {
 			alert(error.message);
-      return;
+			return;
 		} finally {
 			setFetching(false);
 		}
@@ -205,7 +221,7 @@ const VendorInvoiceUpload = () => {
 				const exists = await isInvoiceExists(invoiceNumber, vendorName);
 				if (exists) {
 					alert(
-						"This invoice number already exists. You can update it by selecting the Re-upload option."
+						"This invoice number already exists. You can update it by selecting the Invoice Re-upload option."
 					);
 					return;
 				}
@@ -219,11 +235,15 @@ const VendorInvoiceUpload = () => {
 			!vendorName ||
 			!invoiceDate ||
 			!invoiceValue ||
-			!purchaseOrderNumber ||
+			//!purchaseOrderNumber ||
 			!pocName ||
 			!invoiceNumber
 		) {
 			alert("Please fill in all required fields.");
+			return;
+		}
+		if ((!selectedPoNumbers || selectedPoNumbers?.length === 0) && purchaseOrderNumber?.length === 0) {
+			alert("Please select at least one Purchase Order Number.");
 			return;
 		}
 		if (files.length === 0 || serviceAcceptanceFile.length === 0) {
@@ -244,13 +264,14 @@ const VendorInvoiceUpload = () => {
 			}),
 			invoiceDate,
 			invoiceValue,
-			purchaseOrderNumber,
+			...(activeTab === "re-upload" ? { selectedPOId: selectedPOId } : {}),
 			invoiceNumber,
 			ondcContactPocId: pocRecordId,
 			ondcContactPocName: pocName,
 			files,
 			record_id: recordId,
 			serviceAcceptanceFile,
+			selectedPoNumbers: selectedPoNumbers?.length ? selectedPoNumbers : purchaseOrderNumber,
 			...(activeTab === "re-upload" ? { updateRecordId: updateRecordId } : {}),
 		};
 		try {
@@ -306,7 +327,7 @@ const VendorInvoiceUpload = () => {
 		setVendorName("");
 		setInvoiceDate("");
 		setInvoiceValue("");
-		setPurchaseOrderNumber("");
+		setPurchaseOrderNumber([]);
 		setOndcContactEmail("");
 		setInvoiceNumber("");
 		setFilePath("");
@@ -323,314 +344,321 @@ const VendorInvoiceUpload = () => {
 		}
 		setFiles([]);
 		setServiceAcceptanceFile([]);
-    setUpdateRecordId('');
-    setWorkflowStatus('');
-    setVerifyName('');
-    setVerifyPan('');
-    setVerifyInvoice('');
-    setInvoiceNumber('');
-    setPocEmailStatus('');
+		setUpdateRecordId("");
+		setWorkflowStatus("");
+		setVerifyName("");
+		setVerifyPan("");
+		setVerifyInvoice("");
+		setInvoiceNumber("");
+		setPocEmailStatus("");
+		setSelectedPoNumbers("");
+		setPoMap("");
+		setselectedPOId([]);
 	};
 
 	return (
-		<div className="main-container" style={{ marginTop: 75 }}>
+		<>
 			<Navbar />
 			<InvoiceTabs activeTab={activeTab} handleTabChange={handleTabChange} />
-			<div className="main-content">
-				<div className="form-container">
-					<div className="form-header">
-						<h2 className="form-title">
-							{activeTab === "re-upload"
-								? "Vendor Invoice Re-Upload"
-								: activeTab === "check-status"
-								? "Check Invoice Status"
-								: "Vendor Invoice Upload"}
-						</h2>
-					</div>
-          {activeTab === 'check-status'? (
-            <CheckInvoiceStatus />
-          ):(
-					<form onSubmit={handleSubmit} onReset={handleReset} encType="multipart/form-data">
-						<div className="grid-container">
-							<InputField
-								label="Vendor Pan Number"
-								isRequired={true}
-								id="vendorPanNumber"
-								name="vendorPanNumber"
-								placeholder="Enter Vendor PAN Number"
-								value={vendorPanNumber}
-								onChange={(e) => handleChange(e)}
-								onBlur={(e) => handleFilter(e)} // onBlur is included here
-							/>
-							<div className="form-group half-width">
-								<div style={{ display: "flex", alignItems: "center" }}>
-									<label htmlFor="vendorName">Company Name</label>
-									<p
-										style={{
-											color: "red",
-											margin: "0 0 0 5px",
-											position: "relative",
-											top: "-3px",
-										}}
-									>
-										*
-									</p>
-								</div>
-								<select
-									id="vendorName"
-									name="vendorName"
-									value={vendorName}
-									className="form-input"
-									onChange={handleVendorNameChange}
-								>
-									<option value="" disabled>
-										{loaderforName ? "Getting company names..." : "Select Company"}
-									</option>
-									{!loaderforName &&
-										vendorMap?.map((vendor) => (
-											<option key={vendor.id} value={vendor.id}>
-												{vendor.name}
+			<div className="main-container" style={{ marginTop: 140 }}>
+				<div className="main-content">
+					<div className="form-container">
+						<div className="form-header">
+							<h2 className="form-title">
+								{activeTab === "re-upload"
+									? "Vendor Invoice Re-Upload"
+									: activeTab === "check-status"
+									? "Check Invoice Status"
+									: "Vendor Invoice Upload"}
+							</h2>
+						</div>
+						{activeTab === "check-status" ? (
+							<CheckInvoiceStatus />
+						) : (
+							<form onSubmit={handleSubmit} onReset={handleReset} encType="multipart/form-data">
+								<div className="grid-container">
+									<InputField
+										label="Vendor Pan Number"
+										isRequired={true}
+										id="vendorPanNumber"
+										name="vendorPanNumber"
+										placeholder="Enter Vendor PAN Number"
+										value={vendorPanNumber}
+										onChange={(e) => handleChange(e)}
+										onBlur={(e) => handleFilter(e)} // onBlur is included here
+									/>
+									<div className="form-group half-width">
+										<div style={{ display: "flex", alignItems: "center" }}>
+											<label htmlFor="vendorName">Company Name</label>
+											<p
+												style={{
+													color: "red",
+													margin: "0 0 0 5px",
+													position: "relative",
+													top: "-3px",
+												}}
+											>
+												*
+											</p>
+										</div>
+										<select
+											id="vendorName"
+											name="vendorName"
+											value={vendorName}
+											className="form-input"
+											onChange={handleVendorNameChange}
+											onBlur={fetchPoNumbers}
+										>
+											<option value="" disabled>
+												{loaderforName
+													? "Getting company names..."
+													: "Select Company"}
 											</option>
-										))}
-									{!loaderforName && vendorMap?.length === 0 && (
-										<option value="" disabled>
-											No company names available
-										</option>
-									)}
-								</select>
-							</div>
-							<InputField
-								label="Invoice Number"
-								isRequired={true}
-								id="invoiceNumber"
-								name="invoiceNumber"
-								type="number"
-								value={invoiceNumber}
-								onChange={handleChange}
-								additionalContent={
-									!fetching && activeTab === "re-upload" ? (
-										<button type="button" onClick={fetchInvoiceData}>
-											Get the Details
-										</button>
-									) : fetching ? (
-										<p>Fetching the Details...</p>
-									) : null
-								}
-							/>
-							<InputField
-								label="Invoice Date"
-								isRequired={true}
-								id="invoiceDate"
-								name="invoiceDate"
-								type="date"
-								value={invoiceDate}
-								onChange={handleChange}
-							/>
-							<InputField
-								label="Invoice Value"
-								isRequired={true}
-								id="invoiceValue"
-								name="invoiceValue"
-								type="number"
-								value={invoiceValue}
-								onChange={handleChange}
-							/>
-							<div className="form-group">
-								<div style={{ display: "flex", alignItems: "center" }}>
-									<label htmlFor="invoiceCopy">Upload Invoice Copy</label>
-									<p
-										style={{
-											color: "red",
-											margin: "0 0 0 5px",
-											position: "relative",
-											top: "-3px",
-										}}
-									>
-										*
-									</p>
-								</div>
-								<input
-									type="file"
-									id="invoiceCopy"
-									name="invoiceCopy"
-									ref={fileInputRef}
-									className="form-input"
-									onChange={(e) => {
-										handleFileChange(e, "invoice");
-									}}
-								/>
-								{loading && <div style={{ color: "green" }}>Uploading...</div>}
-								{filePath && (
-									<div style={{ marginTop: 10, color: "green" }}>
-										<p style={{ marginBottom: "5px" }}>
-											<strong>Current file:</strong>
-										</p>
-										<p style={{ wordWrap: "break-word" }}>{filePath}</p>
-									</div>
-								)}
-							</div>
-							<div className="form-group">
-								<div style={{ display: "flex", alignItems: "center" }}>
-									<label htmlFor="purchaseOrderNumber">Purchase Order Number</label>
-									<p
-										style={{
-											color: "red",
-											margin: "0 0 0 5px",
-											position: "relative",
-											top: "-3px",
-										}}
-									>
-										*
-									</p>
-								</div>
-								<select
-									id="poNumber"
-									name="poNumber"
-									value={purchaseOrderNumber}
-									onClick={fetchPoNumbers}
-									className="form-input"
-									onChange={(e) => setPurchaseOrderNumber(e.target.value)}
-								>
-									<option value="" disabled>
-										{poLoader ? "Loading POs..." : "Select PO Number"}
-									</option>
-									{purchaseOrderNumber &&
-										!poMap.some((po) => po.number === purchaseOrderNumber) && (
-											<option value={purchaseOrderNumber}>{purchaseOrderNumber}</option>
-										)}
-									{poMap?.length > 0
-										? poMap.map((po, index) => (
-												<option key={index} value={po.number}>
-													{po.number}
-												</option>
-										  ))
-										: !poLoader && (
+											{!loaderforName &&
+												vendorMap?.map((vendor) => (
+													<option key={vendor.id} value={vendor.id}>
+														{vendor.name}
+													</option>
+												))}
+											{!loaderforName && vendorMap?.length === 0 && (
 												<option value="" disabled>
-													No POs available/select the vendor name
+													No company names available
 												</option>
-										  )}
-								</select>
-							</div>
-							<InputField
-								label="ONDC Contact Email"
-								isRequired={true}
-								id="ondcContactEmail"
-								name="ondcContactEmail"
-								type="email"
-								value={ondcContactEmail}
-								onChange={handleChange}
-								onBlur={(e) => {
-									handlePocEmailChange(e);
-								}}
-								additionalContent={
-									pocEmailStatus && <div style={{ color: "red" }}>{pocEmailStatus}</div>
-								}
-							/>
-							<div className="form-group">
-								<div style={{ display: "flex", alignItems: "center" }}>
-									<label htmlFor="ondcContactPoc">ONDC Contact POC</label>
-									<p
-										style={{
-											color: "red",
-											margin: "0 0 0 5px",
-											position: "relative",
-											top: "-3px",
+											)}
+										</select>
+									</div>
+									<InputField
+										label="Invoice Number"
+										isRequired={true}
+										id="invoiceNumber"
+										name="invoiceNumber"
+										type="number"
+										value={invoiceNumber}
+										onChange={handleChange}
+										additionalContent={
+											!fetching && activeTab === "re-upload" ? (
+												<button type="button" onClick={fetchInvoiceData}>
+													Get the Details
+												</button>
+											) : fetching ? (
+												<p>Fetching the Details...</p>
+											) : null
+										}
+									/>
+									<InputField
+										label="Invoice Date"
+										isRequired={true}
+										id="invoiceDate"
+										name="invoiceDate"
+										type="date"
+										value={invoiceDate}
+										onChange={handleChange}
+									/>
+									<InputField
+										label="Invoice Value"
+										isRequired={true}
+										id="invoiceValue"
+										name="invoiceValue"
+										type="number"
+										value={invoiceValue}
+										onChange={handleChange}
+									/>
+									<div className="form-group">
+										<div style={{ display: "flex", alignItems: "center" }}>
+											<label htmlFor="invoiceCopy">Upload Invoice Copy</label>
+											<p
+												style={{
+													color: "red",
+													margin: "0 0 0 5px",
+													position: "relative",
+													top: "-3px",
+												}}
+											>
+												*
+											</p>
+										</div>
+										<input
+											type="file"
+											id="invoiceCopy"
+											name="invoiceCopy"
+											ref={fileInputRef}
+											className="form-input"
+											onChange={(e) => {
+												handleFileChange(e, "invoice");
+											}}
+										/>
+										{loading && <div style={{ color: "green" }}>Uploading...</div>}
+										{filePath && (
+											<a
+												href={filePath}
+												target="_blank"
+												rel="noopener noreferrer"
+												style={{
+													marginBottom: "5px",
+													fontSize: "15px",
+													color: "#3944BC",
+													cursor: "pointer",
+													textDecoration:'none'
+												}}
+											>
+												📎 1 File Attached
+											</a>
+										)}
+									</div>
+									<PurchaseOrderCheckboxes
+										poMap={poMap}
+										setSelectedPoNumbers={setSelectedPoNumbers}
+										poLoader={poLoader}
+										purchaseOrderNumber={purchaseOrderNumber}
+									/>
+									<InputField
+										label="ONDC Contact Email"
+										isRequired={true}
+										id="ondcContactEmail"
+										name="ondcContactEmail"
+										type="email"
+										value={ondcContactEmail}
+										onChange={handleChange}
+										onBlur={(e) => {
+											handlePocEmailChange(e);
 										}}
-									>
-										*
-									</p>
-								</div>
-								<select
-									id="ondcContactPoc"
-									name="ondcContactPoc"
-									value={pocName}
-									className="form-input"
-									onChange={handlePocNameChange}
-								>
-									<option value="" disabled>
-										{loaderforPoc ? "Getting POC names..." : "Select Contact POC"}
-									</option>
-									{!loaderforPoc &&
-										pocMap?.length > 0 &&
-										pocMap?.map((poc) => (
-											<option key={poc.id} value={poc.id}>
-												{poc.name}
+										additionalContent={
+											pocEmailStatus && (
+												<div style={{ color: "red" }}>{pocEmailStatus}</div>
+											)
+										}
+									/>
+									<div className="form-group">
+										<div style={{ display: "flex", alignItems: "center" }}>
+											<label htmlFor="ondcContactPoc">ONDC Contact POC</label>
+											<p
+												style={{
+													color: "red",
+													margin: "0 0 0 5px",
+													position: "relative",
+													top: "-3px",
+												}}
+											>
+												*
+											</p>
+										</div>
+										<select
+											id="ondcContactPoc"
+											name="ondcContactPoc"
+											value={pocName}
+											className="form-input"
+											onChange={handlePocNameChange}
+										>
+											<option value="" disabled>
+												{loaderforPoc ? "Getting POC names..." : "Select Contact POC"}
 											</option>
-										))}
-									{!loaderforPoc && pocMap.length === 0 && (
-										<option value="" disabled>
-											No POCs available
-										</option>
-									)}
-								</select>
-							</div>
-							<div className="form-group">
-								<div style={{ display: "flex", alignItems: "center" }}>
-									<label htmlFor="serviceAcceptanceFile">Service Acceptance File</label>
-									<p
-										style={{
-											color: "red",
-											margin: "0 0 0 5px",
-											position: "relative",
-											top: "-3px",
-										}}
-									>
-										*
-									</p>
+											{!loaderforPoc &&
+												pocMap?.length > 0 &&
+												pocMap?.map((poc) => (
+													<option key={poc.id} value={poc.id}>
+														{poc.name}
+													</option>
+												))}
+											{!loaderforPoc && pocMap.length === 0 && (
+												<option value="" disabled>
+													No POCs available
+												</option>
+											)}
+										</select>
+									</div>
+									<div className="form-group">
+										<div style={{ display: "flex", alignItems: "center" }}>
+											<label htmlFor="serviceAcceptanceFile">
+												Service Acceptance File
+											</label>
+											<p
+												style={{
+													color: "red",
+													margin: "0 0 0 5px",
+													position: "relative",
+													top: "-3px",
+												}}
+											>
+												*
+											</p>
+										</div>
+										<input
+											type="file"
+											id="serviceAcceptanceFile"
+											name="serviceAcceptanceFile"
+											ref={serviceFileInputRef}
+											className="form-input"
+											onChange={(e) => {
+												handleFileChange(e, "service");
+											}}
+										/>
+										{loaderForService && (
+											<div style={{ color: "green" }}>Uploading...</div>
+										)}
+										{/* {serviceFilePath && (
+											<p
+												style={{
+													marginBottom: "5px",
+													fontSize: "15px",
+													color: "#3944BC",
+												}}
+											>
+												1 File Attached
+											</p>
+										)} */}
+										{serviceFilePath && (
+											<a
+												href={serviceFilePath}
+												target="_blank"
+												rel="noopener noreferrer"
+												style={{
+													marginBottom: "5px",
+													fontSize: "15px",
+													color: "#3944BC",
+													cursor: "pointer",
+													textDecoration:'none'
+												}}
+											>
+												📎 1 File Attached
+											</a>
+										)}
+									</div>
 								</div>
-								<input
-									type="file"
-									id="serviceAcceptanceFile"
-									name="serviceAcceptanceFile"
-									ref={serviceFileInputRef}
-									className="form-input"
-									onChange={(e) => {
-										handleFileChange(e, "service");
-									}}
-								/>
-								{loaderForService && <div style={{ color: "green" }}>Uploading...</div>}
-								{serviceFilePath && (
-									<div style={{ marginTop: 10, color: "green" }}>
-										<p style={{ marginBottom: "5px" }}>
-											<strong>Current file:</strong>
-										</p>
-										<p style={{ wordWrap: "break-word" }}>{serviceFilePath}</p>
+
+								<div className="form-actions">
+									<button
+										type="submit"
+										className={loaderSubmit ? "submit-button-loading" : "submit-button"}
+										disabled={loaderSubmit}
+									>
+										{loaderSubmit ? "Submitting....." : "Submit"}
+									</button>
+									<button type="reset" className="clear-button">
+										Clear
+									</button>
+								</div>
+								{submissionStatus === "success" && (
+									<div style={{ color: "green", fontSize: "18" }}>
+										Thank you for uploading your invoice to the system.
+										<br></br>
+										<br></br>
+										Your invoice is currently being processed and will go through various
+										stages of approval. We will notify you of its status at each stage.
+										<br></br>
+										Thank you for your patience.
 									</div>
 								)}
-							</div>
-						</div>
-
-						<div className="form-actions">
-							<button
-								type="submit"
-								className={loaderSubmit ? "submit-button-loading" : "submit-button"}
-								disabled={loaderSubmit}
-							>
-								{loaderSubmit ? "Submitting....." : "Submit"}
-							</button>
-							<button type="reset" className="clear-button">
-								Clear
-							</button>
-						</div>
-						{submissionStatus === "success" && (
-							<div style={{ color: "green", fontSize: "18" }}>
-								Thank you for uploading your invoice to the system.
-								<br></br>
-								<br></br>
-								Your invoice is currently being processed and will go through various stages
-								of approval. We will notify you of its status at each stage.
-								<br></br>
-								Thank you for your patience.
-							</div>
+								{submissionStatus === "error" && (
+									<div style={{ color: "red" }}>
+										Error submitting form. Please try again.
+									</div>
+								)}
+							</form>
 						)}
-						{submissionStatus === "error" && (
-							<div style={{ color: "red" }}>Error submitting form. Please try again.</div>
-						)}
-					</form>
-          )}
+					</div>
 				</div>
 			</div>
-		</div>
+		</>
 	);
 };
 

@@ -2,7 +2,7 @@ import React from "react";
 
 function InvoiceTabs({ activeTab, handleTabChange }) {
 	return (
-		<div className="tab-container" style={{ marginBottom: 10 }}>
+		<div className="tab-container" style={{ marginTop:75 }}>
 			<button
 				className={`tab ${activeTab === "new-upload" ? "active" : ""}`}
 				onClick={() => handleTabChange("new-upload")}
