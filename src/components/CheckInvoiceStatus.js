@@ -26,9 +26,15 @@ function CheckInvoiceStatus() {
 		try {
 			const cleanedValue = panNumber.replace(/\s/g, "");
 			const response = await fetchVendorNames(cleanedValue);
+			console.log("response", response);
+			if (response.length === 0) {
+				alert("No company found for the given PAN number.");
+				setCompanyName("");
+				return;
+			}
 			setCompanyName(response[0].name);
 		} catch (err) {
-			console.log("Failed to fetch company name. Please try again.");
+			alert(`${err}`);
 		} finally {
 			setLoading(false);
 		}
@@ -72,7 +78,7 @@ function CheckInvoiceStatus() {
 						onChange={handlePanChange}
 					/>
 					<button style={{ padding: 4 }} onClick={fetchCompanyData}>
-						Get Company Name
+						{loading ? "Getting..." : "Get Company Name"}
 					</button>
 				</div>
 			)}
@@ -92,7 +98,7 @@ function CheckInvoiceStatus() {
 							</p>
 						</div>
 					)}
-					<div style={{marginTop:20}}>
+					<div style={{ marginTop: 20 }}>
 						<InputField
 							label="Invoice Number"
 							id="invoiceNumber"
@@ -102,26 +108,25 @@ function CheckInvoiceStatus() {
 							onChange={handleInvoiceChange}
 						/>
 						<button style={{ padding: 4 }} onClick={fetchInvoiceStatus}>
-							Check Invoice Status
+							{loading ? "Checking..." : "Check Invoice Status"}
 						</button>
 					</div>
-                    {loading && <p style={{marginTop:5, color:'green'}}>Loading...</p>}
 					{workflowStatus && (
-                        <p 
-                            style={{
-                                color: "#007BFF", 
-                                cursor: "pointer", 
-                                textDecoration: "underline", 
-                                display: "inline-block", 
-                                borderRadius: "4px", 
-                                backgroundColor: "#f8f9fa",
-                                fontSize: "14px",
-                                marginTop:20
-                            }} 
-                            onClick={resetForm}
-                        >
-                            Check with Another Pan Number
-                        </p>                    
+						<p
+							style={{
+								color: "#007BFF",
+								cursor: "pointer",
+								textDecoration: "underline",
+								display: "inline-block",
+								borderRadius: "4px",
+								backgroundColor: "#f8f9fa",
+								fontSize: "14px",
+								marginTop: 20,
+							}}
+							onClick={resetForm}
+						>
+							Check with Another Pan Number
+						</p>
 					)}
 				</div>
 			)}
