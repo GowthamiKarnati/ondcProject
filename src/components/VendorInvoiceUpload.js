@@ -53,6 +53,7 @@ const VendorInvoiceUpload = () => {
 	const [poLoader, setPoLoader] = useState(false);
 	const [selectedPoNumbers, setSelectedPoNumbers] = useState([]);
 	const [selectedPOId, setselectedPOId] = useState([]);
+	console.log('selectedPoNumbers', selectedPoNumbers)
 	const handleChange = (e) => {
 		const { name, value } = e.target;
 		switch (name) {
@@ -242,7 +243,7 @@ const VendorInvoiceUpload = () => {
 				return;
 			}
 		}
-		if ((!selectedPoNumbers || selectedPoNumbers?.length === 0) && purchaseOrderNumber?.length === 0) {
+		if ((!selectedPoNumbers || selectedPoNumbers?.length === 0)) {
 			alert("Please select at least one Purchase Order Number.");
 			return;
 		}
@@ -271,7 +272,7 @@ const VendorInvoiceUpload = () => {
 			files,
 			record_id: recordId,
 			serviceAcceptanceFile,
-			selectedPoNumbers: selectedPoNumbers?.length ? selectedPoNumbers : purchaseOrderNumber,
+			selectedPoNumbers: selectedPoNumbers,
 			...(activeTab === "re-upload" ? { updateRecordId: updateRecordId } : {}),
 		};
 		try {
@@ -510,6 +511,7 @@ const VendorInvoiceUpload = () => {
 										setSelectedPoNumbers={setSelectedPoNumbers}
 										poLoader={poLoader}
 										purchaseOrderNumber={purchaseOrderNumber}
+										selectedPoNumbers={selectedPoNumbers}
 									/>
 									<InputField
 										label="ONDC Contact Email"
