@@ -208,6 +208,18 @@ const VendorInvoiceUpload = () => {
 			alert("Please verify the Vendor Pan and Name");
 			return;
 		}
+		if (
+			!vendorPanNumber ||
+			!vendorName ||
+			!invoiceDate ||
+			!invoiceValue ||
+			//!purchaseOrderNumber ||
+			!pocName ||
+			!invoiceNumber
+		) {
+			alert("Please fill in all required fields.");
+			return;
+		}
 		if (activeTab === "re-upload") {
 			if (workflowStatus !== "New" && workflowStatus !== "Dept Approval Pending") {
 				alert(
@@ -229,18 +241,6 @@ const VendorInvoiceUpload = () => {
 				alert("An error occurred while checking the invoice number. Please try again.");
 				return;
 			}
-		}
-		if (
-			!vendorPanNumber ||
-			!vendorName ||
-			!invoiceDate ||
-			!invoiceValue ||
-			//!purchaseOrderNumber ||
-			!pocName ||
-			!invoiceNumber
-		) {
-			alert("Please fill in all required fields.");
-			return;
 		}
 		if ((!selectedPoNumbers || selectedPoNumbers?.length === 0) && purchaseOrderNumber?.length === 0) {
 			alert("Please select at least one Purchase Order Number.");
