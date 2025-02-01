@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import "../App.css";
 import Navbar from "./Navbar";
 import {
@@ -54,6 +54,18 @@ const VendorInvoiceUpload = () => {
 	const [selectedPoNumbers, setSelectedPoNumbers] = useState([]);
 	const [selectedPOId, setselectedPOId] = useState([]);
 	console.log('selectedPoNumbers', selectedPoNumbers)
+	useEffect(() => {
+		if (submissionStatus === "success") {
+			alert(
+				"Thank you for uploading your invoice to the system.\n\n" +
+				"Your invoice is currently being processed and will go through various " +
+				"stages of approval. We will notify you of its status at each stage.\n\n" +
+				"Thank you for your patience."
+			);
+		} else if (submissionStatus === "error") {
+			alert("Error submitting form. Please try again.");
+		}
+	}, [submissionStatus]); 
 	const handleChange = (e) => {
 		const { name, value } = e.target;
 		switch (name) {
@@ -277,6 +289,7 @@ const VendorInvoiceUpload = () => {
 		};
 		try {
 			const response = await submitInvoice(activeTab, payload);
+			setLoaderSubmit(false);
 			setSubmissionStatus("success");
 			setTimeout(() => {
 				setSubmissionStatus(null);
@@ -386,7 +399,7 @@ const VendorInvoiceUpload = () => {
 										placeholder="Enter Vendor PAN Number"
 										value={vendorPanNumber}
 										onChange={(e) => handleChange(e)}
-										onBlur={(e) => handleFilter(e)} // onBlur is included here
+										onBlur={(e) => handleFilter(e)}
 									/>
 									<div className="form-group half-width">
 										<div style={{ display: "flex", alignItems: "center" }}>
@@ -442,7 +455,7 @@ const VendorInvoiceUpload = () => {
 													Get the Details
 												</button>
 											) : fetching ? (
-												<p>Fetching the Details...</p>
+												<p style={{color:'green'}}>Fetching the Details...</p>
 											) : null
 										}
 									/>
@@ -484,6 +497,7 @@ const VendorInvoiceUpload = () => {
 											name="invoiceCopy"
 											ref={fileInputRef}
 											className="form-input"
+											accept=".jpg,.jpeg,.png,.pdf"
 											onChange={(e) => {
 												handleFileChange(e, "invoice");
 											}}
@@ -590,6 +604,7 @@ const VendorInvoiceUpload = () => {
 											name="serviceAcceptanceFile"
 											ref={serviceFileInputRef}
 											className="form-input"
+											accept=".jpg,.jpeg,.png,.pdf"
 											onChange={(e) => {
 												handleFileChange(e, "service");
 											}}
@@ -639,22 +654,6 @@ const VendorInvoiceUpload = () => {
 										Clear
 									</button>
 								</div>
-								{submissionStatus === "success" && (
-									<div style={{ color: "green", fontSize: "18" }}>
-										Thank you for uploading your invoice to the system.
-										<br></br>
-										<br></br>
-										Your invoice is currently being processed and will go through various
-										stages of approval. We will notify you of its status at each stage.
-										<br></br>
-										Thank you for your patience.
-									</div>
-								)}
-								{submissionStatus === "error" && (
-									<div style={{ color: "red" }}>
-										Error submitting form. Please try again.
-									</div>
-								)}
 							</form>
 						)}
 					</div>

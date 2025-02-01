@@ -1,5 +1,5 @@
-import React, { useState, useRef } from "react";
-import '../App.css'
+import React, { useState, useRef, useEffect } from "react";
+import "../App.css";
 import axios from "axios";
 import InputFeild from "./InputFeild";
 import Navbar from "./Navbar";
@@ -45,6 +45,23 @@ const VendorRegistrationForm = () => {
 	const [msmeNumber, setMsmeNumber] = useState("");
 	const [panCard, setPanCard] = useState([]);
 	const [panCardUpload, setPanCardUpload] = useState(false);
+	useEffect(() => {
+		if (submissionStatus === "success") {
+			alert(
+				"Vendor Registration Details Successfully Submitted!\n\n" +
+					"Thank you for providing your vendor registration details. Your information " +
+					"has been successfully captured and recorded in our system. We will review " +
+					"the submitted details and get back to you if any additional information is " +
+					"needed.\n\nPlease keep an eye on your email for further communication from " +
+					"our team. If you have any immediate questions or concerns, feel free to " +
+					"contact our support team."
+			);
+			return;
+		} else if (submissionStatus === "error") {
+			alert("Error submitting form. Please try again.");
+			return;
+		}
+	}, [submissionStatus]);
 	const handleInputChange = (setter) => (event) => {
 		setter(event.target.value);
 	};
@@ -223,7 +240,7 @@ const VendorRegistrationForm = () => {
 					"Content-Type": "application/json",
 				},
 			});
-
+			setIsSubmitting(false);
 			setSubmissionStatus("success");
 			setTimeout(() => {
 				setSubmissionStatus(null);
@@ -235,7 +252,7 @@ const VendorRegistrationForm = () => {
 				setSubmissionStatus(null);
 			}, 5000);
 		} finally {
-			setIsSubmitting(false);
+			setIsSubmitting(false);			
 			setLegalEntityName("");
 			setContactPersonName("");
 			setDesignation("");
@@ -393,13 +410,12 @@ const VendorRegistrationForm = () => {
 									id="pan-card-upload"
 									name="pan-card-upload"
 									className="form-file-input"
+									accept=".jpg,.jpeg,.png,.pdf"
 									ref={panFileInputRef}
 									onChange={(e) => handleFileChange(e, "pan")}
 								/>
-							</div>
-							{panCardUpload && (
-								<div style={{ color: "green", marginBottom: "0px" }}>Uploading...</div>
-							)}
+								{panCardUpload && <div style={{ color: "green" }}>Uploading...</div>}
+							</div>	
 							<TypeOfEntity
 								typeOfEntity={typeOfEntity}
 								setTypeOfEntity={setTypeOfEntity}
@@ -493,6 +509,7 @@ const VendorRegistrationForm = () => {
 											id="udyam-certificate"
 											name="udyam-certificate"
 											className="form-file-input"
+											accept=".jpg,.jpeg,.png,.pdf"
 											//ref={fileInputRef}
 											onChange={(e) => {
 												handleFileChange(e, "udyam");
@@ -589,6 +606,7 @@ const VendorRegistrationForm = () => {
 											id="gst-certificate"
 											name="gst-certificate"
 											className="form-file-input"
+											accept=".jpg,.jpeg,.png,.pdf"
 											//ref={fileInputRef}
 											onChange={(e) => {
 												handleFileChange(e, "gst");
@@ -659,6 +677,7 @@ const VendorRegistrationForm = () => {
 									id="cancelled-cheque"
 									name="cancelled-cheque"
 									className="form-file-input"
+									accept=".jpg,.jpeg,.png,.pdf"
 									ref={fileInputRef}
 									onChange={(e) => {
 										handleFileChange(e, "cheque");
@@ -671,22 +690,6 @@ const VendorRegistrationForm = () => {
 									{isSubmitting ? "Submitting..." : "Submit"}
 								</button>
 							</div>
-							{submissionStatus === "success" && (
-								<div style={{ color: "green", fontSize: "18" }}>
-									Vendor Registration Details Successfully Submitted!
-									<br></br>
-									<br></br>
-									Thank you for providing your vendor registration details. Your information
-									has been successfully captured and recorded in our system. We will review
-									the submitted details and get back to you if any additional information is
-									needed. Please keep an eye on your email for further communication from
-									our team. If you have any immediate questions or concerns, feel free to
-									contact our support team.
-								</div>
-							)}
-							{submissionStatus === "error" && (
-								<div style={{ color: "red" }}>Error submitting form. Please try again.</div>
-							)}
 						</div>
 					</form>
 				</div>
