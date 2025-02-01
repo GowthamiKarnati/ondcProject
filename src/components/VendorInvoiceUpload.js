@@ -53,19 +53,20 @@ const VendorInvoiceUpload = () => {
 	const [poLoader, setPoLoader] = useState(false);
 	const [selectedPoNumbers, setSelectedPoNumbers] = useState([]);
 	const [selectedPOId, setselectedPOId] = useState([]);
-	console.log('selectedPoNumbers', selectedPoNumbers)
+	console.log("selectedPoNumbers", selectedPoNumbers);
 	useEffect(() => {
 		if (submissionStatus === "success") {
+			const action = activeTab === "re-upload" ? "updating" : "uploading";
 			alert(
-				"Thank you for uploading your invoice to the system.\n\n" +
-				"Your invoice is currently being processed and will go through various " +
-				"stages of approval. We will notify you of its status at each stage.\n\n" +
-				"Thank you for your patience."
+				`Thank you for ${action} your invoice to the system.\n\n` +
+					"Your invoice is currently being processed and will go through various " +
+					"stages of approval. We will notify you of its status at each stage.\n\n" +
+					"Thank you for your patience."
 			);
 		} else if (submissionStatus === "error") {
 			alert("Error submitting form. Please try again.");
 		}
-	}, [submissionStatus]); 
+	}, [submissionStatus]);
 	const handleChange = (e) => {
 		const { name, value } = e.target;
 		switch (name) {
@@ -105,6 +106,8 @@ const VendorInvoiceUpload = () => {
 			try {
 				const vendorData = await fetchVendorNames(cleanedValue);
 				setVendorMap(vendorData);
+			} catch (err) {
+				console.error("Error fetching vendor names:", err.message);
 			} finally {
 				setLoaderforName(false);
 			}
@@ -255,7 +258,7 @@ const VendorInvoiceUpload = () => {
 				return;
 			}
 		}
-		if ((!selectedPoNumbers || selectedPoNumbers?.length === 0)) {
+		if (!selectedPoNumbers || selectedPoNumbers?.length === 0) {
 			alert("Please select at least one Purchase Order Number.");
 			return;
 		}
@@ -455,7 +458,7 @@ const VendorInvoiceUpload = () => {
 													Get the Details
 												</button>
 											) : fetching ? (
-												<p style={{color:'green'}}>Fetching the Details...</p>
+												<p style={{ color: "green" }}>Fetching the Details...</p>
 											) : null
 										}
 									/>
@@ -513,7 +516,7 @@ const VendorInvoiceUpload = () => {
 													fontSize: "15px",
 													color: "#3944BC",
 													cursor: "pointer",
-													textDecoration:'none'
+													textDecoration: "none",
 												}}
 											>
 												📎 1 File Attached
@@ -633,7 +636,7 @@ const VendorInvoiceUpload = () => {
 													fontSize: "15px",
 													color: "#3944BC",
 													cursor: "pointer",
-													textDecoration:'none'
+													textDecoration: "none",
 												}}
 											>
 												📎 1 File Attached
